@@ -1,6 +1,5 @@
 // 全局变量
 let customWords = {};
-let isTranslating = false;
 let translationOverlay = null;
 let originalTexts = new Map(); // 保存原始文本内容
 let isShowingOriginal = false; // 标记是否正在显示原文
@@ -8,7 +7,7 @@ let isSelectingArea = false; // 标记是否正在选择区域
 let elementSelector = null; // 元素选择器实例
 
 // 初始化
-console.log('LazyTranslate content script 已加载');
+// console.log('LazyTranslate content script 已加载');
 
 // 立即设置消息监听器
 setupMessageListener();
@@ -16,7 +15,7 @@ setupMessageListener();
 // 延迟加载自定义词库
 setTimeout(async () => {
   await loadCustomWords();
-  console.log('自定义词库加载完成');
+  // console.log('自定义词库加载完成');
 }, 100);
 
 // 加载自定义词库
@@ -24,7 +23,7 @@ async function loadCustomWords() {
   try {
     const result = await chrome.storage.local.get(['customWords']);
     customWords = result.customWords || {};
-    console.log('加载自定义词库:', customWords);
+    // console.log('加载自定义词库:', customWords);
   } catch (error) {
     console.error('加载自定义词库失败:', error);
   }
@@ -32,14 +31,14 @@ async function loadCustomWords() {
 
 // 设置消息监听器
 function setupMessageListener() {
-  console.log('设置消息监听器');
+  // console.log('设置消息监听器');
   
   chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
-    console.log('Content script 收到消息:', request);
+    // console.log('Content script 收到消息:', request);
     
     switch (request.action) {
       case 'translateCurrentPage':
-        console.log('开始翻译页面');
+        // console.log('开始翻译页面');
         translateElement(null).then(() => {
           sendResponse({ success: true, message: '页面翻译完成' });
         }).catch(error => {
@@ -49,7 +48,7 @@ function setupMessageListener() {
         return true; // 保持消息通道开放
         
       case 'translateSelection':
-        console.log('开始区域选择翻译');
+        // console.log('开始区域选择翻译');
         startAreaSelection().then(() => {
           sendResponse({ success: true, message: '区域选择模式已启动' });
         }).catch(error => {
@@ -59,7 +58,7 @@ function setupMessageListener() {
         return true; // 保持消息通道开放
         
       case 'showOriginal':
-        console.log('显示网页原文');
+        // console.log('显示网页原文');
         showOriginalPage().then(() => {
           sendResponse({ success: true, message: '显示原文完成' });
         }).catch(error => {
@@ -69,7 +68,7 @@ function setupMessageListener() {
         return true; // 保持消息通道开放
         
       default:
-        console.log('未知消息类型:', request.action);
+        // console.log('未知消息类型:', request.action);
         sendResponse({ success: false, error: '未知消息类型' });
         return true;
     }
@@ -89,10 +88,10 @@ function setupMessageListener() {
 // 启动区域选择模式
 async function startAreaSelection() {
   try {
-    console.log('启动区域选择模式');
+    // console.log('启动区域选择模式');
     
     if (isSelectingArea) {
-      console.log('已经在选择区域模式');
+      // console.log('已经在选择区域模式');
       return;
     }
     
@@ -108,7 +107,7 @@ async function startAreaSelection() {
     
     // 设置元素选中回调
     elementSelector.setElementSelectedCallback(async (element) => {
-      console.log('选择了区域:', element);
+      // console.log('选择了区域:', element);
       
       // 停止选择模式
       stopAreaSelection();
@@ -123,7 +122,7 @@ async function startAreaSelection() {
     // 添加ESC键监听器（退出选择模式）
     document.addEventListener('keydown', handleKeyDown);
     
-    console.log('区域选择模式已启动');
+    // console.log('区域选择模式已启动');
     
   } catch (error) {
     console.error('启动区域选择失败:', error);
@@ -136,15 +135,14 @@ function handleKeyDown(event) {
   if (!isSelectingArea) return;
   
   if (event.key === 'Escape') {
-    console.log('用户按ESC键，退出选择模式');
+    // console.log('用户按ESC键，退出选择模式');
     stopAreaSelection();
-    stopTranslate();
   }
 }
 
 // 停止区域选择模式
 function stopAreaSelection() {
-  console.log('停止区域选择模式');
+  // console.log('停止区域选择模式');
   
   isSelectingArea = false;
   
@@ -160,15 +158,9 @@ function stopAreaSelection() {
   showNotification('区域选择模式已退出', 'info');
 }
 
-// 停止翻译
-function stopTranslate() {
-  isTranslating = false;
-}
-
 // 翻译指定元素
 async function translateElement(element) {
   showNotification('开始翻译...', 'info');
-  isTranslating = true;
   
   try {
     // 1. 加载设置和自定义词库
@@ -188,10 +180,6 @@ async function translateElement(element) {
     let interval = settings.apiProvider == 'baidu' ? 1000 : 100;
 
     for (let i = 0; i < textNodes.length; i += batchSize) {
-      if (!isTranslating) {
-        break;
-      }
-
       const batch = textNodes.slice(i, i + batchSize);
       const promises = batch.map(node => translateTextNode(node, settings)); 
       
@@ -214,9 +202,7 @@ async function translateElement(element) {
     }
     
     // 翻译成功后
-    showNotification(isTranslating = false ? '翻译已取消' : '页面翻译完成', 'success');
-    isTranslating = false;
-    
+    showNotification('页面翻译完成', 'success');
   } catch (error) {
     console.error('翻译元素失败:', error);
     showNotification('翻译失败，请检查控制台', 'error');
@@ -226,10 +212,10 @@ async function translateElement(element) {
 // 显示网页原文
 async function showOriginalPage() {
   try {
-    console.log('开始显示网页原文');
+    // console.log('开始显示网页原文');
     
     if (isShowingOriginal) {
-      console.log('已经在显示原文状态');
+      // console.log('已经在显示原文状态');
       return;
     }
     
@@ -237,7 +223,7 @@ async function showOriginalPage() {
     await restoreOriginalTexts();
     
     isShowingOriginal = true;
-    console.log('网页原文显示完成');
+    // console.log('网页原文显示完成');
     
     // 显示提示信息
     showNotification('已显示网页原文', 'success');
@@ -283,16 +269,16 @@ function generateNodeId(node) {
 
 // 恢复原始文本内容
 async function restoreOriginalTexts() {
-  console.log('恢复原始文本内容');
+  // console.log('恢复原始文本内容');
   
   if (originalTexts.size === 0) {
-    console.log('没有保存的原始文本');
+    // console.log('没有保存的原始文本');
     return;
   }
   
   // 遍历所有被标记的父元素
   const translatedElements = document.querySelectorAll('[data-lazytranslate-id]');
-  console.log('找到被翻译的元素数量:', translatedElements.length);
+  // console.log('找到被翻译的元素数量:', translatedElements.length);
   
   for (const element of translatedElements) {
     const nodeId = element.getAttribute('data-lazytranslate-id');
@@ -304,7 +290,7 @@ async function restoreOriginalTexts() {
       for (const textNode of textNodes) {
         if (textNode.textContent.trim()) {
           textNode.textContent = originalText;
-          console.log('恢复节点文本:', originalText);
+          // console.log('恢复节点文本:', originalText);
           break; // 只恢复第一个文本节点
         }
       }
@@ -318,12 +304,12 @@ async function restoreOriginalTexts() {
   // 移除字体样式
   removeFontStyles();
   
-  console.log('原始文本恢复完成');
+  // console.log('原始文本恢复完成');
 }
 
 // 恢复翻译后的内容
 async function restoreTranslatedContent() {
-  console.log('恢复翻译后的内容');
+  // console.log('恢复翻译后的内容');
   
   await translateElement(null);
   
@@ -342,7 +328,7 @@ async function getDefaultSettings() {
       apiProvider: settings.apiProvider || 'google',
       googleApiProxy: settings.googleApiProxy || ''
     };
-    console.log('获取默认设置:', defaultSettings);
+    // console.log('获取默认设置:', defaultSettings);
     return defaultSettings;
   } catch (error) {
     console.error('获取设置失败:', error);
@@ -446,7 +432,7 @@ async function translateTextNode(node, settings) {
 // 翻译文本
 async function translateText(text, settings) {
   return new Promise((resolve, reject) => {
-    console.log('发送翻译请求:', { text, settings });
+    // console.log('发送翻译请求:', { text, settings });
     
     const msg = {
       action: 'translate',
@@ -466,7 +452,7 @@ async function translateText(text, settings) {
       }
       
       if (response && response.success) {
-        console.log('翻译成功:', response.translatedText);
+        // console.log('翻译成功:', response.translatedText);
         resolve(response.translatedText);
       } else {
         console.error('翻译失败:', response?.error);
@@ -525,17 +511,17 @@ function showNotification(message, type = 'info') {
 // 应用字体设置
 function applyFontSettings(fontFamily) {
   if (!fontFamily || fontFamily.trim() === '') {
-    console.log('未设置字体，使用默认字体');
+    // console.log('未设置字体，使用默认字体');
     return;
   }
   
-  console.log('应用字体设置:', fontFamily);
+  // console.log('应用字体设置:', fontFamily);
   
   // 查找所有已翻译的元素
   const translatedElements = document.querySelectorAll('[data-lazytranslate="translated"]');
   
   if (translatedElements.length === 0) {
-    console.log('没有找到已翻译的元素');
+    // console.log('没有找到已翻译的元素');
     return;
   }
   
@@ -556,7 +542,7 @@ function applyFontSettings(fontFamily) {
     });
   });
   
-  console.log(`字体已应用到 ${translatedElements.length} 个翻译元素`);
+  // console.log(`字体已应用到 ${translatedElements.length} 个翻译元素`);
 }
 
 // 添加字体样式到页面
@@ -574,7 +560,7 @@ function addFontStyle(fontFamily) {
   `;
   
   document.head.appendChild(styleElement);
-  console.log('字体样式已添加到页面');
+  // console.log('字体样式已添加到页面');
 }
 
 // 移除字体样式
@@ -590,13 +576,13 @@ function removeFontStyles() {
     element.classList.remove('lazytranslate-font-applied');
   });
   
-  console.log('字体样式已移除');
+  // console.log('字体样式已移除');
 }
 
 // 监听自定义词库变化
 chrome.storage.onChanged.addListener((changes, namespace) => {
   if (namespace === 'local' && changes.customWords) {
     customWords = changes.customWords.newValue || {};
-    console.log('自定义词库已更新:', customWords);
+    // console.log('自定义词库已更新:', customWords);
   }
 }); 

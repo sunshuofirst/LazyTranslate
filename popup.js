@@ -167,7 +167,7 @@ async function saveSettings() {
     };
     
     await chrome.storage.local.set({ settings: newSettings });
-    console.log('设置已保存:', newSettings);
+    // console.log('设置已保存:', newSettings);
   } catch (error) {
     console.error('保存设置失败:', error);
   }
@@ -255,7 +255,7 @@ async function addCustomWord(original, translated) {
     document.getElementById('originalWord').value = '';
     document.getElementById('translatedWord').value = '';
     
-    console.log('词汇已添加');
+    // console.log('词汇已添加');
   } catch (error) {
     console.error('添加词汇失败:', error);
   }
@@ -272,7 +272,7 @@ async function deleteCustomWord(word) {
     await chrome.storage.local.set({ customWords });
     await loadCustomWords();
     
-    console.log('词汇已删除');
+    // console.log('词汇已删除');
   } catch (error) {
     console.error('删除词汇失败:', error);
   }
@@ -283,7 +283,7 @@ async function clearCustomWords() {
   try {
     await chrome.storage.local.set({ customWords: {} });
     await loadCustomWords();
-    console.log('词库已清空');
+    // console.log('词库已清空');
   } catch (error) {
     console.error('清空词库失败:', error);
   }

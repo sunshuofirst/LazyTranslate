@@ -37,12 +37,12 @@ chrome.runtime.onInstalled.addListener(() => {
     contexts: ['page']
   });
   
-  console.log('LazyTranslate 扩展已安装');
+  // console.log('LazyTranslate 扩展已安装');
 });
 
 // 处理右键菜单点击
 chrome.contextMenus.onClicked.addListener(async (info, tab) => {
-  console.log('右键菜单点击:', info.menuItemId, tab);
+  // console.log('右键菜单点击:', info.menuItemId, tab);
   
   switch (info.menuItemId) {
     case 'lazyTranslateTranslatePage':
@@ -63,20 +63,11 @@ chrome.contextMenus.onClicked.addListener(async (info, tab) => {
 // 翻译整个页面
 async function translatePage(tab) {
   try {
-    console.log('开始翻译页面:', tab.url);
-    
-    // 首先确保content script已注入
-    await chrome.scripting.executeScript({
-      target: { tabId: tab.id },
-      files: ['content.js']
-    });
-    
-    // 等待一下确保content script加载完成
-    await new Promise(resolve => setTimeout(resolve, 100));
-    
+    // console.log('开始翻译页面:', tab.url);
+
     // 发送消息给content script
     await chrome.tabs.sendMessage(tab.id, {
-      action: 'translatePage'
+      action: 'translateCurrentPage'
     });
   } catch (error) {
     console.error('翻译页面失败:', error);
@@ -86,15 +77,7 @@ async function translatePage(tab) {
 // 翻译选中文本
 async function translateSelection(tab, selectionText) {
   try {
-    console.log('启动区域选择翻译模式');
-    
-    // 确保content script已注入
-    await chrome.scripting.executeScript({
-      target: { tabId: tab.id },
-      files: ['content.js']
-    });
-    
-    await new Promise(resolve => setTimeout(resolve, 100));
+    // console.log('启动区域选择翻译模式');
     
     // 发送消息给content script启动区域选择模式
     await chrome.tabs.sendMessage(tab.id, {
@@ -108,13 +91,7 @@ async function translateSelection(tab, selectionText) {
 // 显示网页原文
 async function showOriginalPage(tab) {
   try {
-    console.log('显示网页原文:', tab.url);
-    
-    // 确保content script已注入
-    await chrome.scripting.executeScript({
-      target: { tabId: tab.id },
-      files: ['content.js']
-    });
+    // console.log('显示网页原文:', tab.url);
     
     await new Promise(resolve => setTimeout(resolve, 100));
     
@@ -163,7 +140,7 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
 
 // 监听来自 popup 的长连接
 chrome.runtime.onConnect.addListener((port) => {
-  console.log('onConnect', port);
+  // console.log('onConnect', port);
   port.onMessage.addListener((request) => {
     if (request.action === 'translate') {
       const { text, sourceLang, targetLang, apiProvider, googleApiProxy } = request;
@@ -189,11 +166,11 @@ chrome.runtime.onConnect.addListener((port) => {
 
 // 核心翻译函数
 async function translate(text, sourceLang, targetLang, apiProvider, apiKey, googleApiProxy) {
-  console.log(`开始翻译:
-    - Provider: ${apiProvider}
-    - From: ${sourceLang}
-    - To: ${targetLang}
-    - Text: "${text.substring(0, 50)}..."`);
+  // console.log(`开始翻译:
+  //   - Provider: ${apiProvider}
+  //   - From: ${sourceLang}
+  //   - To: ${targetLang}
+  //   - Text: "${text.substring(0, 50)}..."`);
     
   switch (apiProvider) {
     case 'google':
