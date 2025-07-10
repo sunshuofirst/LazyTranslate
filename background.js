@@ -15,13 +15,13 @@ chrome.runtime.onInstalled.addListener(() => {
   // 创建右键菜单 - 一级菜单结构
   chrome.contextMenus.create({
     id: 'lazyTranslateTranslatePage',
-    title: '翻译此页面',
+    title: '翻译当前页面',
     contexts: ['page']
   });
   
   chrome.contextMenus.create({
     id: 'lazyTranslateTranslateSelection',
-    title: '翻译此区域',
+    title: '翻译选中内容',
     contexts: ['page']
   });
   

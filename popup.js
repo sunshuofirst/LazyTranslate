@@ -356,6 +356,36 @@ async function translateCurrentPage() {
     console.error('翻译页面失败:', error);
   }
 }
+// 翻译选中内容
+async function translateSelectedText() {
+  try {
+    const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
+    
+    if (tab) {
+      window.close();
+      await chrome.tabs.sendMessage(tab.id, {
+        action: 'translateSelection'
+      });
+    }
+  } catch (error) {
+    console.error('翻译选中内容失败:', error);
+  }
+}
+// 显示网页原文
+async function showOriginalText() {
+  try {
+    const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
+    
+    if (tab) {
+      window.close();
+      await chrome.tabs.sendMessage(tab.id, {
+        action: 'showOriginal'
+      });
+    }
+  } catch (error) {
+    console.error('显示网页原文失败:', error);
+  }
+}
 
 // 设置事件监听器
 function setupEventListeners() {
@@ -363,6 +393,16 @@ function setupEventListeners() {
   const translateButton = document.getElementById('translateButton');
   if (translateButton) {
     translateButton.addEventListener('click', translateCurrentPage);
+  }
+  // 翻译选中内容
+  const translateSelectionButton = document.getElementById('translateSelectionButton');
+  if (translateSelectionButton) {
+    translateSelectionButton.addEventListener('click', translateSelectedText);
+  }
+  // 显示网页原文
+  const showOriginalTextButton = document.getElementById('showOriginalTextButton');
+  if (showOriginalTextButton) {
+    showOriginalTextButton.addEventListener('click', showOriginalText);
   }
 
   // 监听设置变化并保存

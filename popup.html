@@ -113,6 +113,8 @@
 
     <section class="actions">
       <button id="translateButton" class="primary-btn">翻译当前页面</button>
+      <button id="translateSelectionButton" class="primary-btn">翻译选中内容</button>
+      <button id="showOriginalTextButton" class="primary-btn">显示网页原文</button>
     </section>
 
     <section class="api-settings">
@@ -130,7 +132,7 @@
         <input type="text" id="googleApiProxy" placeholder="请输入谷歌翻译API代理">
         <!-- <button id="saveGoogleApiProxy">保存代理</button> -->
       </div>
-      <div class="api-key-section" id="apiKeyBaiduSection" style="display: none;">
+      <div class="google-api-proxy" id="apiKeyBaiduSection" style="display: none;">
         <label for="apiKeyBaidu">百度翻译API密钥:</label>
         <div class="password-input-container">
           <input type="password" id="apiKeyBaidu" placeholder="请输入API密钥">
@@ -146,7 +148,7 @@
           </button>
         </div>
       </div>
-      <div class="api-key-section" id="apiKeyTencentSection" style="display: none;">
+      <div class="google-api-proxy" id="apiKeyTencentSection" style="display: none;">
         <label for="apiKeyTencent">腾讯翻译API密钥:</label>
         <div class="password-input-container">
           <input type="password" id="apiKeyTencent" placeholder="请输入SecretId:SecretKey">
