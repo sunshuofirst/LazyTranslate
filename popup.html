@@ -121,7 +121,6 @@
         <label for="apiProvider">选择API:</label>
         <select id="apiProvider">
           <option value="google">谷歌翻译</option>
-          <option value="microsoft">微软翻译</option>
           <option value="baidu">百度翻译</option>
         </select>
       </div>
@@ -130,10 +129,21 @@
         <input type="text" id="googleApiProxy" placeholder="请输入谷歌翻译API代理">
         <!-- <button id="saveGoogleApiProxy">保存代理</button> -->
       </div>
-      <div class="api-key-section" id="apiKeySection" style="display: none;">
-        <label for="apiKey">API密钥:</label>
-        <input type="password" id="apiKey" placeholder="请输入API密钥">
-        <!-- <button id="saveApiKey">保存密钥</button> -->
+      <div class="api-key-section" id="apiKeyBaiduSection" style="display: none;">
+        <label for="apiKeyBaidu">百度翻译API密钥:</label>
+        <div class="password-input-container">
+          <input type="password" id="apiKeyBaidu" placeholder="请输入API密钥">
+          <button type="button" class="toggle-password" id="toggleBaiduPassword">
+            <svg class="eye-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
+              <circle cx="12" cy="12" r="3"></circle>
+            </svg>
+            <svg class="eye-slash-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="display: none;">
+              <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"></path>
+              <line x1="1" y1="1" x2="23" y2="23"></line>
+            </svg>
+          </button>
+        </div>
       </div>
     </section>
 

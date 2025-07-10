@@ -4,7 +4,7 @@ const DEFAULT_SETTINGS = {
   targetLang: 'zh',
   targetLangFont: '', // 添加目标语言字体设置
   apiProvider: 'google',
-  apiKey: '',
+  apiKeyBaidu: '',
   customWords: {},
   googleApiProxy: '' // 新增谷歌API代理
 };
@@ -133,11 +133,11 @@ async function loadSettings() {
     document.getElementById('targetLang').value = settings.targetLang;
     // 注意：字体的值将由 updateFontOptions 函数设置
     document.getElementById('apiProvider').value = settings.apiProvider;
-    document.getElementById('apiKey').value = settings.apiKey;
+    document.getElementById('apiKeyBaidu').value = settings.apiKeyBaidu || '';
     // 新增：填充googleApiProxy输入框
-    document.getElementById('googleApiProxy').value = settings.googleApiProxy;
+    document.getElementById('googleApiProxy').value = settings.googleApiProxy || '';
     
-    toggleApiKeySection(settings.apiProvider);
+    toggleApiKeyBaiduSection(settings.apiProvider);
     toggleGoogleApiProxySection(settings.apiProvider);
     
     // 返回 settings 对象，供其他函数使用
@@ -162,7 +162,7 @@ async function saveSettings() {
       targetLang: document.getElementById('targetLang').value,
       targetLangFont: document.getElementById('targetLangFont').value,
       apiProvider: document.getElementById('apiProvider').value,
-      apiKey: document.getElementById('apiKey').value,
+      apiKeyBaidu: document.getElementById('apiKeyBaidu').value,
       googleApiProxy: document.getElementById('googleApiProxy').value
     };
     
@@ -290,14 +290,14 @@ async function clearCustomWords() {
 }
 
 // 切换API密钥输入框显示
-function toggleApiKeySection(apiProvider) {
-  const apiKeySection = document.getElementById('apiKeySection');
-  const needsApiKey = apiProvider === 'microsoft' || apiProvider === 'baidu';
+function toggleApiKeyBaiduSection(apiProvider) {
+  const apiKeyBaiduSection = document.getElementById('apiKeyBaiduSection');
+  const needsApiKeyBaidu = apiProvider === 'tencent' || apiProvider === 'baidu';
   
-  if (needsApiKey) {
-    apiKeySection.style.display = 'block';
+  if (needsApiKeyBaidu) {
+    apiKeyBaiduSection.style.display = 'block';
   } else {
-    apiKeySection.style.display = 'none';
+    apiKeyBaiduSection.style.display = 'none';
   }
 }
 
@@ -357,7 +357,7 @@ function setupEventListeners() {
   const targetLang = document.getElementById('targetLang');
   const targetLangFont = document.getElementById('targetLangFont');
   const apiProvider = document.getElementById('apiProvider');
-  const apiKey = document.getElementById('apiKey');
+  const apiKeyBaidu = document.getElementById('apiKeyBaidu');
   const googleApiProxy = document.getElementById('googleApiProxy');
 
   if (sourceLang) {
@@ -381,14 +381,14 @@ function setupEventListeners() {
   // API提供商变化时，切换API密钥输入框和谷歌代理输入框的显示并保存
   if (apiProvider) {
     apiProvider.addEventListener('change', (e) => {
-      toggleApiKeySection(e.target.value);
+      toggleApiKeyBaiduSection(e.target.value);
       toggleGoogleApiProxySection(e.target.value);
       saveSettings();
     });
   }
 
-  if (apiKey) {
-    apiKey.addEventListener('change', saveSettings);
+  if (apiKeyBaidu) {
+    apiKeyBaidu.addEventListener('change', saveSettings);
   }
 
   if (googleApiProxy) {
@@ -430,7 +430,28 @@ function setupEventListeners() {
   }
 
   // 谷歌API代理输入框变化时，自动保存
+  const googleApiProxyInput = document.getElementById('googleApiProxy');
   if (googleApiProxyInput) {
     googleApiProxyInput.addEventListener('input', saveSettings);
   }
-} 
+
+  // 密码显示切换功能
+  const toggleBaiduPassword = document.getElementById('toggleBaiduPassword');
+  if (toggleBaiduPassword) {
+    toggleBaiduPassword.addEventListener('click', () => {
+      const passwordInput = document.getElementById('apiKeyBaidu');
+      const eyeIcon = toggleBaiduPassword.querySelector('.eye-icon');
+      const eyeSlashIcon = toggleBaiduPassword.querySelector('.eye-slash-icon');
+      
+      if (passwordInput.type === 'password') {
+        passwordInput.type = 'text';
+        eyeIcon.style.display = 'none';
+        eyeSlashIcon.style.display = 'block';
+      } else {
+        passwordInput.type = 'password';
+        eyeIcon.style.display = 'block';
+        eyeSlashIcon.style.display = 'none';
+      }
+    });
+  }
+}

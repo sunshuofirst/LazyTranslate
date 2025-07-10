@@ -121,10 +121,10 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
     // 从存储中获取 API Key
     chrome.storage.local.get(['settings'], result => {
       const settings = result.settings || {};
-      const apiKey = settings.apiKey || '';
+      const apiKeyBaidu = settings.apiKeyBaidu || '';
       
       // 调用统一的翻译函数，传递googleApiProxy
-      translate(text, sourceLang, targetLang, apiProvider, apiKey, googleApiProxy || settings.googleApiProxy)
+      translate(text, sourceLang, targetLang, apiProvider, apiKeyBaidu, googleApiProxy || settings.googleApiProxy)
         .then(translatedText => {
           sendResponse({ success: true, translatedText });
         })
@@ -148,10 +148,10 @@ chrome.runtime.onConnect.addListener((port) => {
       // 从存储中获取 API Key
       chrome.storage.local.get(['settings'], result => {
         const settings = result.settings || {};
-        const apiKey = settings.apiKey || '';
+        const apiKeyBaidu = settings.apiKeyBaidu || '';
         
         // 调用统一的翻译函数，传递googleApiProxy
-        translate(text, sourceLang, targetLang, apiProvider, apiKey, googleApiProxy || settings.googleApiProxy)
+        translate(text, sourceLang, targetLang, apiProvider, apiKeyBaidu, googleApiProxy || settings.googleApiProxy)
           .then(translatedText => {
             port.postMessage({ success: true, translatedText });
           })
@@ -165,7 +165,7 @@ chrome.runtime.onConnect.addListener((port) => {
 });
 
 // 核心翻译函数
-async function translate(text, sourceLang, targetLang, apiProvider, apiKey, googleApiProxy) {
+async function translate(text, sourceLang, targetLang, apiProvider, apiKeyBaidu, googleApiProxy) {
   // console.log(`开始翻译:
   //   - Provider: ${apiProvider}
   //   - From: ${sourceLang}
@@ -175,10 +175,8 @@ async function translate(text, sourceLang, targetLang, apiProvider, apiKey, goog
   switch (apiProvider) {
     case 'google':
       return translateWithGoogle(text, sourceLang, targetLang, googleApiProxy);
-    case 'microsoft':
-      return translateWithMicrosoft(text, sourceLang, targetLang, apiKey);
     case 'baidu':
-      return translateWithBaidu(text, sourceLang, targetLang, apiKey);
+      return translateWithBaidu(text, sourceLang, targetLang, apiKeyBaidu);
     default:
       return Promise.reject(new Error('未知的翻译提供商'));
   }
@@ -203,44 +201,9 @@ async function translateWithGoogle(text, sourceLang, targetLang, googleApiProxy)
   throw new Error('谷歌翻译失败');
 }
 
-// 微软翻译API
-async function translateWithMicrosoft(text, sourceLang, targetLang, apiKey) {
-  if (!apiKey) {
-    throw new Error('请先配置微软翻译API密钥');
-  }
-  
-  const endpoint = 'https://api.cognitive.microsofttranslator.com';
-  const location = 'global';
-  
-  const url = `${endpoint}/translate?api-version=3.0&from=${sourceLang}&to=${targetLang}`;
-  
-  const response = await fetch(url, {
-    method: 'POST',
-    headers: {
-      'Ocp-Apim-Subscription-Key': apiKey,
-      'Ocp-Apim-Subscription-Region': location,
-      'Content-Type': 'application/json',
-      'X-ClientTraceId': generateUUID()
-    },
-    body: JSON.stringify([{ text }])
-  });
-  
-  if (!response.ok) {
-    throw new Error(`微软翻译API错误: ${response.status}`);
-  }
-  
-  const data = await response.json();
-  
-  if (data && data[0] && data[0].translations && data[0].translations[0]) {
-    return data[0].translations[0].text;
-  }
-  
-  throw new Error('微软翻译失败');
-}
-
 // 百度翻译API
-async function translateWithBaidu(text, sourceLang, targetLang, apiKey) {
-  const [appid, secret] = apiKey.split(':');
+async function translateWithBaidu(text, sourceLang, targetLang, apiKeyBaidu) {
+  const [appid, secret] = apiKeyBaidu.split(':');
   const salt = Date.now();
   const sign = await generateMD5(appid + text + salt + secret);
   
