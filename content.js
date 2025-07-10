@@ -177,7 +177,7 @@ async function translateElement(element) {
 
     // 3. 批量翻译节点，所有逻辑都在 translateTextNode 中处理
     const batchSize = 5;
-    let interval = settings.apiProvider == 'baidu' ? 1000 : 100;
+    let interval = settings.apiProvider == 'google' ? 100 : 1000;
 
     for (let i = 0; i < textNodes.length; i += batchSize) {
       const batch = textNodes.slice(i, i + batchSize);

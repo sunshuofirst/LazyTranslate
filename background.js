@@ -122,9 +122,10 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
     chrome.storage.local.get(['settings'], result => {
       const settings = result.settings || {};
       const apiKeyBaidu = settings.apiKeyBaidu || '';
+      const apiKeyTencent = settings.apiKeyTencent || '';
       
       // 调用统一的翻译函数，传递googleApiProxy
-      translate(text, sourceLang, targetLang, apiProvider, apiKeyBaidu, googleApiProxy || settings.googleApiProxy)
+      translate(text, sourceLang, targetLang, apiProvider, apiKeyBaidu, apiKeyTencent, googleApiProxy || settings.googleApiProxy)
         .then(translatedText => {
           sendResponse({ success: true, translatedText });
         })
@@ -149,9 +150,10 @@ chrome.runtime.onConnect.addListener((port) => {
       chrome.storage.local.get(['settings'], result => {
         const settings = result.settings || {};
         const apiKeyBaidu = settings.apiKeyBaidu || '';
+        const apiKeyTencent = settings.apiKeyTencent || '';
         
         // 调用统一的翻译函数，传递googleApiProxy
-        translate(text, sourceLang, targetLang, apiProvider, apiKeyBaidu, googleApiProxy || settings.googleApiProxy)
+        translate(text, sourceLang, targetLang, apiProvider, apiKeyBaidu, apiKeyTencent, googleApiProxy || settings.googleApiProxy)
           .then(translatedText => {
             port.postMessage({ success: true, translatedText });
           })
@@ -165,7 +167,7 @@ chrome.runtime.onConnect.addListener((port) => {
 });
 
 // 核心翻译函数
-async function translate(text, sourceLang, targetLang, apiProvider, apiKeyBaidu, googleApiProxy) {
+async function translate(text, sourceLang, targetLang, apiProvider, apiKeyBaidu, apiKeyTencent, googleApiProxy) {
   // console.log(`开始翻译:
   //   - Provider: ${apiProvider}
   //   - From: ${sourceLang}
@@ -177,6 +179,8 @@ async function translate(text, sourceLang, targetLang, apiProvider, apiKeyBaidu,
       return translateWithGoogle(text, sourceLang, targetLang, googleApiProxy);
     case 'baidu':
       return translateWithBaidu(text, sourceLang, targetLang, apiKeyBaidu);
+    case 'tencent':
+      return translateWithTencent(text, sourceLang, targetLang, apiKeyTencent);
     default:
       return Promise.reject(new Error('未知的翻译提供商'));
   }
@@ -226,6 +230,94 @@ async function translateWithBaidu(text, sourceLang, targetLang, apiKeyBaidu) {
   throw new Error(`百度翻译失败: ${data.error_msg || '未知错误'}`);
 }
 
+async function translateWithTencent(text, sourceLang, targetLang, apiKeyTencent) {
+  const [secretId, secretKey] = apiKeyTencent.split(':');
+  
+  // 腾讯云API配置
+  const endpoint = 'tmt.tencentcloudapi.com';
+  const service = 'tmt';
+  const region = 'ap-beijing';  // 可以根据需要修改地域
+  const action = 'TextTranslate';
+  const version = '2018-03-21';
+  
+  const timestamp = Math.floor(Date.now() / 1000);
+  const date = new Date(timestamp * 1000).toISOString().substr(0, 10);
+  
+  // 请求体
+  const payload = JSON.stringify({
+    SourceText: text,
+    Source: sourceLang === 'auto' ? 'auto' : sourceLang,
+    Target: targetLang,
+    ProjectId: 0
+  });
+  
+  // 步骤1：拼接规范请求串
+  const canonicalHeaders = [
+    `content-type:application/json; charset=utf-8`,
+    `host:${endpoint}`,
+    `x-tc-action:${action.toLowerCase()}`,
+    `x-tc-region:${region}`,
+    `x-tc-timestamp:${timestamp}`,
+    `x-tc-version:${version}`
+  ].join('\n') + '\n';
+  
+  const signedHeaders = 'content-type;host;x-tc-action;x-tc-region;x-tc-timestamp;x-tc-version';
+  
+  const hashedRequestPayload = await sha256(payload);
+  
+  const canonicalRequest = [
+    'POST',
+    '/',
+    '',
+    canonicalHeaders,
+    signedHeaders,
+    hashedRequestPayload
+  ].join('\n');
+  
+  // 步骤2：拼接待签名字符串
+  const algorithm = 'TC3-HMAC-SHA256';
+  const hashedCanonicalRequest = await sha256(canonicalRequest);
+  const credentialScope = `${date}/${service}/tc3_request`;
+  const stringToSign = [
+    algorithm,
+    timestamp,
+    credentialScope,
+    hashedCanonicalRequest
+  ].join('\n');
+  
+  // 步骤3：计算签名
+  const secretDate = await hmacSha256(date, `TC3${secretKey}`);
+  const secretService = await hmacSha256(service, secretDate);
+  const secretSigning = await hmacSha256('tc3_request', secretService);
+  const signature = await hmacSha256(stringToSign, secretSigning);
+  
+  // 步骤4：拼接 Authorization
+  const authorization = `${algorithm} Credential=${secretId}/${credentialScope}, SignedHeaders=${signedHeaders}, Signature=${signature}`;
+  
+  // 发起请求
+  const response = await fetch(`https://${endpoint}`, {
+    method: 'POST',
+    headers: {
+      'Authorization': authorization,
+      'Content-Type': 'application/json; charset=utf-8',
+      'Host': endpoint,
+      'X-TC-Action': action,
+      'X-TC-Region': region,
+      'X-TC-Timestamp': timestamp.toString(),
+      'X-TC-Version': version
+    },
+    body: payload
+  });
+  
+  const data = await response.json();
+  
+  if (data.Response && data.Response.TargetText) {
+    return data.Response.TargetText;
+  }
+  
+  throw new Error(`腾讯翻译失败: ${data.Response?.Error?.Message || '未知错误'}`);
+}
+
 // 生成UUID
 function generateUUID() {
   return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
@@ -241,6 +333,45 @@ async function generateMD5(text) {
     throw new Error('CryptoJS not loaded');
   }
   return CryptoJS.MD5(text).toString();
+}
+
+// SHA256 哈希函数
+async function sha256(message) {
+  const msgBuffer = new TextEncoder().encode(message);
+  const hashBuffer = await crypto.subtle.digest('SHA-256', msgBuffer);
+  const hashArray = Array.from(new Uint8Array(hashBuffer));
+  return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+}
+
+// HMAC-SHA256 签名函数
+async function hmacSha256(message, key) {
+  const encoder = new TextEncoder();
+  const keyData = typeof key === 'string' ? encoder.encode(key) : key;
+  const messageData = encoder.encode(message);
+  
+  const cryptoKey = await crypto.subtle.importKey(
+    'raw',
+    keyData,
+    { name: 'HMAC', hash: 'SHA-256' },
+    false,
+    ['sign']
+  );
+  
+  const signature = await crypto.subtle.sign('HMAC', cryptoKey, messageData);
+  const signatureArray = new Uint8Array(signature);
+  
+  // 如果需要返回十六进制字符串（用于最终签名）
+  if (typeof message === 'string' && message.includes('TC3-HMAC-SHA256')) {
+    return bytesToHex(signatureArray);
+  }
+  
+  // 返回字节数组（用于中间步骤）
+  return signatureArray;
+}
+
+// 将字节数组转换为十六进制字符串
+function bytesToHex(bytes) {
+  return Array.from(bytes, byte => byte.toString(16).padStart(2, '0')).join('');
 }
 
 // 这个函数在目标标签页中执行
@@ -259,4 +390,4 @@ function triggerPageTranslation() {
     // 向 content script 发送消息
     chrome.runtime.sendMessage({ action: 'translatePage', settings: settings });
   });
-} 
+}

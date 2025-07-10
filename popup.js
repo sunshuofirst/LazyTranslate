@@ -5,6 +5,7 @@ const DEFAULT_SETTINGS = {
   targetLangFont: '', // 添加目标语言字体设置
   apiProvider: 'google',
   apiKeyBaidu: '',
+  apiKeyTencent: '', // 新增腾讯翻译API Key
   customWords: {},
   googleApiProxy: '' // 新增谷歌API代理
 };
@@ -134,10 +135,11 @@ async function loadSettings() {
     // 注意：字体的值将由 updateFontOptions 函数设置
     document.getElementById('apiProvider').value = settings.apiProvider;
     document.getElementById('apiKeyBaidu').value = settings.apiKeyBaidu || '';
-    // 新增：填充googleApiProxy输入框
     document.getElementById('googleApiProxy').value = settings.googleApiProxy || '';
+    document.getElementById('apiKeyTencent').value = settings.apiKeyTencent || '';
     
     toggleApiKeyBaiduSection(settings.apiProvider);
+    toggleApiKeyTencentSection(settings.apiProvider);
     toggleGoogleApiProxySection(settings.apiProvider);
     
     // 返回 settings 对象，供其他函数使用
@@ -163,6 +165,7 @@ async function saveSettings() {
       targetLangFont: document.getElementById('targetLangFont').value,
       apiProvider: document.getElementById('apiProvider').value,
       apiKeyBaidu: document.getElementById('apiKeyBaidu').value,
+      apiKeyTencent: document.getElementById('apiKeyTencent').value,
       googleApiProxy: document.getElementById('googleApiProxy').value
     };
     
@@ -292,12 +295,22 @@ async function clearCustomWords() {
 // 切换API密钥输入框显示
 function toggleApiKeyBaiduSection(apiProvider) {
   const apiKeyBaiduSection = document.getElementById('apiKeyBaiduSection');
-  const needsApiKeyBaidu = apiProvider === 'tencent' || apiProvider === 'baidu';
+  const needsApiKeyBaidu = apiProvider === 'baidu';
   
   if (needsApiKeyBaidu) {
     apiKeyBaiduSection.style.display = 'block';
   } else {
     apiKeyBaiduSection.style.display = 'none';
+  }
+}
+async function toggleApiKeyTencentSection(apiProvider) {
+  const apiKeyTencentSection = document.getElementById('apiKeyTencentSection');
+  const needsApiKeyTencent = apiProvider === 'tencent';
+
+  if (needsApiKeyTencent) {
+    apiKeyTencentSection.style.display = 'block';
+  } else {
+    apiKeyTencentSection.style.display = 'none';
   }
 }
 
@@ -358,6 +371,7 @@ function setupEventListeners() {
   const targetLangFont = document.getElementById('targetLangFont');
   const apiProvider = document.getElementById('apiProvider');
   const apiKeyBaidu = document.getElementById('apiKeyBaidu');
+  const apiKeyTencent = document.getElementById('apiKeyTencent');
   const googleApiProxy = document.getElementById('googleApiProxy');
 
   if (sourceLang) {
@@ -382,6 +396,7 @@ function setupEventListeners() {
   if (apiProvider) {
     apiProvider.addEventListener('change', (e) => {
       toggleApiKeyBaiduSection(e.target.value);
+      toggleApiKeyTencentSection(e.target.value);
       toggleGoogleApiProxySection(e.target.value);
       saveSettings();
     });
@@ -389,6 +404,10 @@ function setupEventListeners() {
 
   if (apiKeyBaidu) {
     apiKeyBaidu.addEventListener('change', saveSettings);
+  }
+  
+  if (apiKeyTencent) {
+    apiKeyTencent.addEventListener('change', saveSettings);
   }
 
   if (googleApiProxy) {
@@ -442,6 +461,25 @@ function setupEventListeners() {
       const passwordInput = document.getElementById('apiKeyBaidu');
       const eyeIcon = toggleBaiduPassword.querySelector('.eye-icon');
       const eyeSlashIcon = toggleBaiduPassword.querySelector('.eye-slash-icon');
+      
+      if (passwordInput.type === 'password') {
+        passwordInput.type = 'text';
+        eyeIcon.style.display = 'none';
+        eyeSlashIcon.style.display = 'block';
+      } else {
+        passwordInput.type = 'password';
+        eyeIcon.style.display = 'block';
+        eyeSlashIcon.style.display = 'none';
+      }
+    });
+  }
+  // 腾讯API密钥显示切换功能
+  const toggleTencentPassword = document.getElementById('toggleTencentPassword');
+  if (toggleTencentPassword) {
+    toggleTencentPassword.addEventListener('click', () => {
+      const passwordInput = document.getElementById('apiKeyTencent');
+      const eyeIcon = toggleTencentPassword.querySelector('.eye-icon');
+      const eyeSlashIcon = toggleTencentPassword.querySelector('.eye-slash-icon');
       
       if (passwordInput.type === 'password') {
         passwordInput.type = 'text';

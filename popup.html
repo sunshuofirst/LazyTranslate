@@ -122,10 +122,11 @@
         <select id="apiProvider">
           <option value="google">谷歌翻译</option>
           <option value="baidu">百度翻译</option>
+          <option value="tencent">腾讯翻译</option>
         </select>
       </div>
       <div class="google-api-proxy" id="googleApiProxySection" style="display: none;">
-        <label for="googleApiProxy">谷歌翻译API代理:</label>
+        <label for="googleApiProxy">谷歌翻译API代理:<br/>空白时直连https://translate.googleapis.com<br/>由于国内无法访问，可使用自己的代理服务器</label>
         <input type="text" id="googleApiProxy" placeholder="请输入谷歌翻译API代理">
         <!-- <button id="saveGoogleApiProxy">保存代理</button> -->
       </div>
@@ -134,6 +135,22 @@
         <div class="password-input-container">
           <input type="password" id="apiKeyBaidu" placeholder="请输入API密钥">
           <button type="button" class="toggle-password" id="toggleBaiduPassword">
+            <svg class="eye-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
+              <circle cx="12" cy="12" r="3"></circle>
+            </svg>
+            <svg class="eye-slash-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="display: none;">
+              <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"></path>
+              <line x1="1" y1="1" x2="23" y2="23"></line>
+            </svg>
+          </button>
+        </div>
+      </div>
+      <div class="api-key-section" id="apiKeyTencentSection" style="display: none;">
+        <label for="apiKeyTencent">腾讯翻译API密钥:</label>
+        <div class="password-input-container">
+          <input type="password" id="apiKeyTencent" placeholder="请输入SecretId:SecretKey">
+          <button type="button" class="toggle-password" id="toggleTencentPassword">
             <svg class="eye-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
               <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
               <circle cx="12" cy="12" r="3"></circle>
@@ -166,4 +183,4 @@
 
   <script src="popup.js"></script>
 </body>
-</html> 
+</html>
