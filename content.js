@@ -196,11 +196,6 @@ async function translateElement(element) {
       }
     }
     
-    // 4. 翻译完成后应用字体设置
-    if (settings.targetLangFont) {
-      applyFontSettings(settings.targetLangFont);
-    }
-    
     // 翻译成功后
     showNotification('页面翻译完成', 'success');
   } catch (error) {
@@ -421,6 +416,11 @@ async function translateTextNode(node, settings) {
         parentElement.setAttribute('data-lazytranslate', 'translated');
       }
       node.textContent = translatedText;
+      
+      // 5. 立即为当前节点应用字体设置
+      if (settings.targetLangFont && parentElement) {
+        applyFontToElement(parentElement, settings.targetLangFont);
+      }
     }
   } catch (error) {
     console.error('翻译文本节点失败:', error, '原始文本:', originalText);
@@ -579,10 +579,54 @@ function removeFontStyles() {
   // console.log('字体样式已移除');
 }
 
+// 为单个元素应用字体设置
+function applyFontToElement(element, fontFamily) {
+  if (!fontFamily || fontFamily.trim() === '') {
+    return;
+  }
+  
+  // 确保字体样式已添加到页面
+  ensureFontStyleExists(fontFamily);
+  
+  // 为当前元素添加字体class
+  element.classList.add('lazytranslate-font-applied');
+  
+  // 递归应用到所有子元素
+  const childElements = element.querySelectorAll('*');
+  childElements.forEach(child => {
+    child.classList.add('lazytranslate-font-applied');
+  });
+}
+
+// 确保字体样式存在于页面中
+function ensureFontStyleExists(fontFamily) {
+  const existingStyle = document.getElementById('lazytranslate-font-style');
+  
+  // 如果样式已存在且字体相同，则无需重新创建
+  if (existingStyle) {
+    const expectedContent = `.lazytranslate-font-applied {\n      font-family: "${fontFamily}" !important;\n    }`;
+    if (existingStyle.textContent.trim().includes(`font-family: "${fontFamily}"`)) {
+      return;
+    }
+    // 如果字体不同，则更新样式
+    existingStyle.textContent = expectedContent;
+  } else {
+    // 创建新的样式元素
+    const styleElement = document.createElement('style');
+    styleElement.id = 'lazytranslate-font-style';
+    styleElement.textContent = `
+    .lazytranslate-font-applied {
+      font-family: "${fontFamily}" !important;
+    }
+  `;
+    document.head.appendChild(styleElement);
+  }
+}
+
 // 监听自定义词库变化
 chrome.storage.onChanged.addListener((changes, namespace) => {
   if (namespace === 'local' && changes.customWords) {
     customWords = changes.customWords.newValue || {};
     // console.log('自定义词库已更新:', customWords);
   }
-}); 
+});
