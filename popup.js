@@ -739,7 +739,7 @@ async function exportCustomWords() {
     // 生成文件名（包含当前日期时间）
     const now = new Date();
     const timestamp = now.toISOString().slice(0, 19).replace(/:/g, '-');
-    link.download = `LazyTranslate_词库_${timestamp}.json`;
+    link.download = `LazyTranslate_Dictionary_${timestamp}.json`;
     
     // 触发下载
     document.body.appendChild(link);
