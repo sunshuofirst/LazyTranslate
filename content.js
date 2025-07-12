@@ -4,6 +4,8 @@ let translationOverlay = null;
 let originalTexts = new Map(); // 保存原始文本内容
 let isShowingOriginal = false; // 标记是否正在显示原文
 let isSelectingArea = false; // 标记是否正在选择区域
+let isTranslating = false; // 标记是否正在翻译
+let translationAborted = false; // 标记翻译是否被中止
 let elementSelector = null; // 元素选择器实例
 
 // 初始化
@@ -132,11 +134,14 @@ async function startAreaSelection() {
 
 // 处理键盘事件
 function handleKeyDown(event) {
-  if (!isSelectingArea) return;
-  
   if (event.key === 'Escape') {
-    // console.log('用户按ESC键，退出选择模式');
-    stopAreaSelection();
+    if (isSelectingArea) {
+      // console.log('用户按ESC键，退出选择模式');
+      stopAreaSelection();
+    } else if (isTranslating) {
+      // console.log('用户按ESC键，中止翻译');
+      abortTranslation();
+    }
   }
 }
 
@@ -163,6 +168,13 @@ async function translateElement(element) {
   showNotification('开始翻译...', 'info');
   
   try {
+    // 设置翻译状态
+    isTranslating = true;
+    translationAborted = false;
+    
+    // 添加ESC键监听器
+    document.addEventListener('keydown', handleKeyDown);
+    
     // 1. 加载设置和自定义词库
     await loadCustomWords();
     const settings = await getDefaultSettings();
@@ -171,24 +183,40 @@ async function translateElement(element) {
     const textNodes = getTextNodes(element === null ? document.body : element);
     if (textNodes.length === 0) {
       showNotification('该区域没有可翻译的文本', 'error');
-      // hideTranslationOverlay();
       return;
     }
+
+    // 显示中止提示
+    showNotification('翻译中... (按ESC键中止)', 'info');
 
     // 3. 批量翻译节点，所有逻辑都在 translateTextNode 中处理
     const batchSize = 5;
     let interval = settings.apiProvider == 'google' ? 100 : 1000;
 
     for (let i = 0; i < textNodes.length; i += batchSize) {
+      // 检查是否被中止
+      if (translationAborted) {
+        showNotification('翻译已中止', 'error');
+        return;
+      }
+      
       const batch = textNodes.slice(i, i + batchSize);
       const promises = batch.map(node => translateTextNode(node, settings)); 
       
-      await Promise.all(promises);
+      try {
+        await Promise.all(promises);
+      } catch (error) {
+        if (translationAborted) {
+          showNotification('翻译已中止', 'error');
+          return;
+        }
+        throw error;
+      }
       
       const progress = Math.min(100, ((i + batchSize) / textNodes.length) * 100);
       updateTranslationProgress(progress);
 
-      showNotification(`翻译进度: ${Math.round(progress)}%`, 'info');
+      showNotification(`翻译进度: ${Math.round(progress)}% (按ESC键中止)`, 'info');
       
       // 添加延迟，避免API限制
       if (i + batchSize < textNodes.length) {
@@ -197,10 +225,25 @@ async function translateElement(element) {
     }
     
     // 翻译成功后
-    showNotification('页面翻译完成', 'success');
+    if (!translationAborted) {
+      showNotification('页面翻译完成', 'success');
+    }
   } catch (error) {
-    console.error('翻译元素失败:', error);
-    showNotification('翻译失败，请检查控制台', 'error');
+    if (translationAborted) {
+      showNotification('翻译已中止', 'error');
+    } else {
+      console.error('翻译元素失败:', error);
+      showNotification('翻译失败，请检查控制台', 'error');
+    }
+  } finally {
+    // 清理翻译状态
+    isTranslating = false;
+    translationAborted = false;
+    
+    // 移除ESC键监听器（只有在不处于选择模式时才移除）
+    if (!isSelectingArea) {
+      document.removeEventListener('keydown', handleKeyDown);
+    }
   }
 }
 
@@ -378,6 +421,11 @@ function escapeRegExp(string) {
 
 // 翻译单个文本节点（重构）
 async function translateTextNode(node, settings) {
+  // 检查翻译是否被中止
+  if (translationAborted) {
+    throw new Error('翻译已中止');
+  }
+  
   const originalText = node.textContent; // 保存包含空格的完整原始内容
   const trimmedText = originalText.trim();
   
@@ -413,8 +461,19 @@ async function translateTextNode(node, settings) {
   
   // 3. 翻译处理后的文本
   try {
+    // 再次检查翻译是否被中止
+    if (translationAborted) {
+      throw new Error('翻译已中止');
+    }
+    
     // 如果替换后与原文相同，可能无需翻译（取决于需求，此处总是翻译以确保流程一致）
     const translatedText = await translateText(textToTranslate, settings);
+    
+    // 翻译完成后再次检查是否被中止
+    if (translationAborted) {
+      throw new Error('翻译已中止');
+    }
+    
     if (translatedText && translatedText !== originalText) {
       // 4. 更新DOM
       const parentElement = node.parentElement;
@@ -429,6 +488,9 @@ async function translateTextNode(node, settings) {
       }
     }
   } catch (error) {
+    if (translationAborted || error.message === '翻译已中止') {
+      throw new Error('翻译已中止');
+    }
     console.error('翻译文本节点失败:', error, '原始文本:', originalText);
     // 重新抛出错误，以中断 Promise.all
     throw error;
@@ -674,3 +736,15 @@ chrome.storage.onChanged.addListener((changes, namespace) => {
     // console.log('自定义词库已更新:', customWords);
   }
 });
+
+// 中止翻译
+function abortTranslation() {
+  // console.log('中止翻译');
+  
+  if (!isTranslating) {
+    return;
+  }
+  
+  translationAborted = true;
+  showNotification('正在中止翻译...', 'info');
+}

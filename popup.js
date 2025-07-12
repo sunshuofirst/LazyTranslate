@@ -226,21 +226,54 @@ function displayCustomWords(customWords) {
     wordList.innerHTML = `
       <div class="empty-state">
         <p>暂无自定义词汇</p>
-        <p>点击下方按钮添加常用词汇</p>
       </div>
     `;
     return;
   }
   
   wordList.innerHTML = words.map(word => `
-    <div class="word-item">
-      <div class="word-content">
-        <div class="word-original">${word}</div>
-        <div class="word-translated">${customWords[word]}</div>
-      </div>
-      <button class="delete-word" data-word="${word}">删除</button>
+    <div class="add-word-form" data-word="${word}">
+        <input type="text" class="edit-original" value="${word}" />
+        <input type="text" class="edit-translated" value="${customWords[word]}" />
+        <button class="delete-word" data-word="${word}">删除</button>
     </div>
   `).join('');
+}
+
+// 自动保存编辑后的词汇
+async function autoSaveEditedWord(oldWord, wordItem) {
+  try {
+    const originalInput = wordItem.querySelector('.edit-original');
+    const translatedInput = wordItem.querySelector('.edit-translated');
+    
+    const newOriginal = originalInput.value.trim();
+    const newTranslated = translatedInput.value.trim();
+    
+    // 验证输入
+    if (!newOriginal || !newTranslated) {
+      return;
+    }
+    
+    const result = await chrome.storage.local.get(['customWords']);
+    const customWords = result.customWords || {};
+    
+    // 如果原词发生了变化，需要删除旧词条
+    if (newOriginal !== oldWord) {
+      // 检查新词汇是否已存在
+      if (customWords[newOriginal] && newOriginal !== oldWord) {
+        return;
+      }
+      delete customWords[oldWord];
+    }
+    
+    // 添加/更新词条
+    customWords[newOriginal] = newTranslated;
+    
+    await chrome.storage.local.set({ customWords });
+    
+  } catch (error) {
+    console.error('自动保存词汇失败:', error);
+  }
 }
 
 // 添加自定义词汇
@@ -284,9 +317,12 @@ async function deleteCustomWord(word) {
 // 清空自定义词库
 async function clearCustomWords() {
   try {
-    await chrome.storage.local.set({ customWords: {} });
-    await loadCustomWords();
-    // console.log('词库已清空');
+    if (confirm('确定要清空所有自定义词库吗？')) { 
+      // 清空词库
+      await chrome.storage.local.set({ customWords: {} });
+      await loadCustomWords();
+      // console.log('词库已清空');
+    }
   } catch (error) {
     console.error('清空词库失败:', error);
   }
@@ -480,12 +516,38 @@ function setupEventListeners() {
         }
       }
     });
+    
+    // 添加输入框变化监听器用于自动保存
+    wordList.addEventListener('input', (e) => {
+      if (e.target.classList.contains('edit-original') || e.target.classList.contains('edit-translated')) {
+        const wordItem = e.target.closest('.word-item');
+        const word = wordItem.dataset.word;
+        
+        // 延迟保存，避免频繁保存
+        clearTimeout(wordItem.saveTimeout);
+        wordItem.saveTimeout = setTimeout(() => {
+          autoSaveEditedWord(word, wordItem);
+        }, 500);
+      }
+    });
   }
   
   // 清空自定义词库
-  const clearWordsButton = document.getElementById('clearWordsButton');
+  const clearWordsButton = document.getElementById('clearWords');
   if (clearWordsButton) {
     clearWordsButton.addEventListener('click', clearCustomWords);
+  }
+
+  // 导出词库
+  const exportWordsButton = document.getElementById('exportWords');
+  if (exportWordsButton) {
+    exportWordsButton.addEventListener('click', exportCustomWords);
+  }
+
+  // 导入词库
+  const importWordsButton = document.getElementById('importWords');
+  if (importWordsButton) {
+    importWordsButton.addEventListener('click', importCustomWords);
   }
 
   // 谷歌API代理输入框变化时，自动保存
@@ -531,5 +593,174 @@ function setupEventListeners() {
         eyeSlashIcon.style.display = 'none';
       }
     });
+  }
+
+  // 导出词库按钮
+  const exportButton = document.getElementById('exportWords');
+  if (exportButton) {
+    exportButton.addEventListener('click', exportCustomWords);
+  }
+
+  // 导入词库按钮
+  const importButton = document.getElementById('importWords');
+  if (importButton) {
+    importButton.addEventListener('click', importCustomWords);
+  }
+}
+
+// 导出词库为JSON文件
+async function exportCustomWords() {
+  try {
+    const result = await chrome.storage.local.get(['customWords']);
+    const customWords = result.customWords || {};
+    
+    // 检查是否有词汇可导出
+    if (Object.keys(customWords).length === 0) {
+      alert('词库为空，没有可导出的内容');
+      return;
+    }
+    
+    // 创建JSON数据
+    const jsonData = JSON.stringify(customWords, null, 2);
+    
+    // 创建Blob对象
+    const blob = new Blob([jsonData], { type: 'application/json;charset=utf-8' });
+    
+    // 创建下载链接
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    
+    // 生成文件名（包含当前日期时间）
+    const now = new Date();
+    const timestamp = now.toISOString().slice(0, 19).replace(/:/g, '-');
+    link.download = `LazyTranslate_词库_${timestamp}.json`;
+    
+    // 触发下载
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    
+    // 释放URL对象
+    URL.revokeObjectURL(url);
+    
+    console.log('词库导出成功');
+  } catch (error) {
+    console.error('导出词库失败:', error);
+    alert('导出词库失败，请重试');
+  }
+}
+
+// 导入词库从JSON文件
+async function importCustomWords() {
+  try {
+    // 创建文件输入元素
+    const fileInput = document.createElement('input');
+    fileInput.type = 'file';
+    fileInput.accept = '.json';
+    fileInput.style.display = 'none';
+    
+    // 添加文件选择事件监听器
+    fileInput.addEventListener('change', async (event) => {
+      const file = event.target.files[0];
+      if (!file) return;
+      
+      // 检查文件类型
+      if (!file.name.toLowerCase().endsWith('.json')) {
+        alert('请选择JSON格式的文件');
+        return;
+      }
+      
+      try {
+        // 读取文件内容
+        const reader = new FileReader();
+        reader.onload = async (e) => {
+          try {
+            // 解析JSON数据
+            const importedWords = JSON.parse(e.target.result);
+            
+            // 验证数据格式
+            if (typeof importedWords !== 'object' || importedWords === null) {
+              alert('文件格式错误：不是有效的词库格式');
+              return;
+            }
+            
+            // 验证每个条目是否为字符串
+            for (const [key, value] of Object.entries(importedWords)) {
+              if (typeof key !== 'string' || typeof value !== 'string') {
+                alert('文件格式错误：词库条目必须为字符串');
+                return;
+              }
+            }
+            
+            // 获取当前词库
+            const result = await chrome.storage.local.get(['customWords']);
+            const currentWords = result.customWords || {};
+            
+            // 检查是否有重复词汇
+            const duplicates = [];
+            for (const key in importedWords) {
+              if (currentWords.hasOwnProperty(key)) {
+                duplicates.push(key);
+              }
+            }
+            
+            let shouldProceed = true;
+            if (duplicates.length > 0) {
+              const duplicateList = duplicates.slice(0, 5).join(', ') + (duplicates.length > 5 ? ` 等${duplicates.length}个` : '');
+              shouldProceed = confirm(`发现重复词汇：${duplicateList}\n\n是否覆盖现有词汇？\n点击"确定"覆盖，点击"取消"跳过重复词汇`);
+              
+              if (!shouldProceed) {
+                // 移除重复词汇
+                for (const key of duplicates) {
+                  delete importedWords[key];
+                }
+              }
+            }
+            
+            if (Object.keys(importedWords).length === 0) {
+              alert('没有新词汇可导入');
+              return;
+            }
+            
+            // 合并词库
+            const mergedWords = { ...currentWords, ...importedWords };
+            
+            // 保存到存储
+            await chrome.storage.local.set({ customWords: mergedWords });
+            
+            // 重新加载词库显示
+            await loadCustomWords();
+            
+            alert(`成功导入 ${Object.keys(importedWords).length} 个词汇`);
+            console.log('词库导入成功');
+            
+          } catch (parseError) {
+            console.error('解析JSON失败:', parseError);
+            alert('文件格式错误：无法解析JSON文件，请检查文件格式');
+          }
+        };
+        
+        reader.onerror = () => {
+          alert('读取文件失败，请重试');
+        };
+        
+        // 以UTF-8编码读取文件
+        reader.readAsText(file, 'UTF-8');
+        
+      } catch (error) {
+        console.error('处理文件失败:', error);
+        alert('处理文件失败，请重试');
+      }
+    });
+    
+    // 触发文件选择对话框
+    document.body.appendChild(fileInput);
+    fileInput.click();
+    document.body.removeChild(fileInput);
+    
+  } catch (error) {
+    console.error('导入词库失败:', error);
+    alert('导入词库失败，请重试');
   }
 }

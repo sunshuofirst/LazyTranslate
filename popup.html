@@ -168,18 +168,22 @@
 
     <section class="custom-words">
       <h2>自定义词库</h2>
-      <div class="word-list" id="wordList">
-        <!-- 自定义词汇将在这里动态显示 -->
-      </div>
       <div class="add-word-form">
         <input type="text" id="originalWord" placeholder="原词">
         <input type="text" id="translatedWord" placeholder="翻译">
         <button id="addWord">添加词汇</button>
       </div>
+      <div id="wordList">
+        <!-- 自定义词汇将在这里动态显示 -->
+      </div>
     </section>
 
     <section class="actions">
       <button id="clearWords" class="secondary-btn">清空词库</button>
+      <button id="exportWords" class="secondary-btn">导出词库</button>
+      <button id="importWords" class="secondary-btn">导入词库</button>
+      <!-- 隐藏的文件输入元素，用于导入功能 -->
+      <input type="file" id="importFileInput" accept=".json" style="display: none;">
     </section>
   </div>
 

@@ -107,7 +107,7 @@ select:focus, input:focus {
   background: #fafbfc;
 }
 
-.word-item {
+/* .word-item {
   display: flex;
   justify-content: space-between;
   align-items: center;
@@ -118,10 +118,30 @@ select:focus, input:focus {
 
 .word-item:last-child {
   border-bottom: none;
-}
+} */
 
 .word-content {
   flex: 1;
+}
+
+.word-content-edit {
+  flex: 1;
+  display: flex;
+  gap: 8px;
+}
+
+.word-content-edit input {
+  flex: 1;
+  padding: 4px 8px;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  font-size: 12px;
+}
+
+.word-content-edit input:focus {
+  outline: none;
+  border-color: #667eea;
+  box-shadow: 0 0 0 2px rgba(102, 126, 234, 0.2);
 }
 
 .word-original {
@@ -135,7 +155,41 @@ select:focus, input:focus {
   color: #666;
 }
 
-.delete-word {
+.edit-original {
+  color: #666;
+}
+
+.edit-translated {
+  color: #666;
+}
+
+.word-actions {
+  display: flex;
+  gap: 8px;
+  flex-shrink: 0;
+}
+
+.word-actions-edit {
+  display: none;
+  flex-shrink: 0;
+}
+
+.save-word {
+  background: #17a2b8;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  padding: 4px 8px;
+  font-size: 12px;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+}
+
+.save-word:hover {
+  background: #138496;
+}
+
+.cancel-word {
   background: #ff4757;
   color: white;
   border: none;
@@ -144,6 +198,30 @@ select:focus, input:focus {
   font-size: 12px;
   cursor: pointer;
   transition: background-color 0.3s ease;
+}
+
+.cancel-word:hover {
+  background: #ff3742;
+}
+
+.edit-word {
+  background: #17a2b8;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  padding: 4px 8px;
+  font-size: 12px;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+}
+
+.edit-word:hover {
+  background: #138496;
+}
+
+.delete-word {
+  background: #ff4757;
+  color: white;
 }
 
 .delete-word:hover {
@@ -189,6 +267,7 @@ button {
   color: #6c757d;
   border: 1px solid #dee2e6;
   width: 100%;
+  margin-bottom: 10px;
 }
 
 .secondary-btn:hover {
