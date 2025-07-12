@@ -28,7 +28,7 @@ const LANGUAGE_MAP = {
 // 字体配置 - 按语言分类
 const FONT_CONFIG = {
   'zh': [
-    { value: '', label: '默认字体' },
+    { value: '', label: 'defaultFont', isI18nKey: true },
     { value: 'Microsoft YaHei', label: '微软雅黑', dataLang: 'zh' },
     { value: 'SimSun', label: '宋体', dataLang: 'zh' },
     { value: 'SimHei', label: '黑体', dataLang: 'zh' },
@@ -38,7 +38,7 @@ const FONT_CONFIG = {
     { value: 'Arial Unicode MS', label: 'Arial Unicode MS', dataLang: 'zh' }
   ],
   'en': [
-    { value: '', label: '默认字体' },
+    { value: '', label: 'defaultFont', isI18nKey: true },
     { value: 'Arial', label: 'Arial', dataLang: 'en' },
     { value: 'Times New Roman', label: 'Times New Roman', dataLang: 'en' },
     { value: 'Helvetica', label: 'Helvetica', dataLang: 'en' },
@@ -47,7 +47,7 @@ const FONT_CONFIG = {
     { value: 'Calibri', label: 'Calibri', dataLang: 'en' }
   ],
   'ja': [
-    { value: '', label: '默认字体' },
+    { value: '', label: 'defaultFont', isI18nKey: true },
     { value: 'Hiragino Kaku Gothic ProN', label: 'ヒラギノ角ゴ ProN', dataLang: 'ja' },
     { value: 'Hiragino Mincho ProN', label: 'ヒラギノ明朝 ProN', dataLang: 'ja' },
     { value: 'Yu Gothic', label: '游ゴシック', dataLang: 'ja' },
@@ -55,49 +55,49 @@ const FONT_CONFIG = {
     { value: 'Noto Sans CJK JP', label: 'Noto Sans CJK JP', dataLang: 'ja' }
   ],
   'ko': [
-    { value: '', label: '默认字体' },
+    { value: '', label: 'defaultFont', isI18nKey: true },
     { value: 'Malgun Gothic', label: '맑은 고딕', dataLang: 'ko' },
     { value: 'Nanum Gothic', label: '나눔고딕', dataLang: 'ko' },
     { value: 'Nanum Myeongjo', label: '나눔명조', dataLang: 'ko' },
     { value: 'Noto Sans CJK KR', label: 'Noto Sans CJK KR', dataLang: 'ko' }
   ],
   'fr': [
-    { value: '', label: '默认字体' },
+    { value: '', label: 'defaultFont', isI18nKey: true },
     { value: 'Arial', label: 'Arial', dataLang: 'fr' },
     { value: 'Times New Roman', label: 'Times New Roman', dataLang: 'fr' },
     { value: 'Calibri', label: 'Calibri', dataLang: 'fr' },
     { value: 'Cambria', label: 'Cambria', dataLang: 'fr' }
   ],
   'de': [
-    { value: '', label: '默认字体' },
+    { value: '', label: 'defaultFont', isI18nKey: true },
     { value: 'Arial', label: 'Arial', dataLang: 'de' },
     { value: 'Times New Roman', label: 'Times New Roman', dataLang: 'de' },
     { value: 'Calibri', label: 'Calibri', dataLang: 'de' },
     { value: 'Cambria', label: 'Cambria', dataLang: 'de' }
   ],
   'es': [
-    { value: '', label: '默认字体' },
+    { value: '', label: 'defaultFont', isI18nKey: true },
     { value: 'Arial', label: 'Arial', dataLang: 'es' },
     { value: 'Times New Roman', label: 'Times New Roman', dataLang: 'es' },
     { value: 'Calibri', label: 'Calibri', dataLang: 'es' },
     { value: 'Cambria', label: 'Cambria', dataLang: 'es' }
   ],
   'ru': [
-    { value: '', label: '默认字体' },
+    { value: '', label: 'defaultFont', isI18nKey: true },
     { value: 'Arial', label: 'Arial', dataLang: 'ru' },
     { value: 'Times New Roman', label: 'Times New Roman', dataLang: 'ru' },
     { value: 'Calibri', label: 'Calibri', dataLang: 'ru' },
     { value: 'Cambria', label: 'Cambria', dataLang: 'ru' }
   ],
   'pt': [
-    { value: '', label: '默认字体' },
+    { value: '', label: 'defaultFont', isI18nKey: true },
     { value: 'Arial', label: 'Arial', dataLang: 'pt' },
     { value: 'Times New Roman', label: 'Times New Roman', dataLang: 'pt' },
     { value: 'Calibri', label: 'Calibri', dataLang: 'pt' },
     { value: 'Cambria', label: 'Cambria', dataLang: 'pt' }
   ],
   'it': [
-    { value: '', label: '默认字体' },
+    { value: '', label: 'defaultFont', isI18nKey: true },
     { value: 'Arial', label: 'Arial', dataLang: 'it' },
     { value: 'Times New Roman', label: 'Times New Roman', dataLang: 'it' },
     { value: 'Calibri', label: 'Calibri', dataLang: 'it' },
@@ -111,22 +111,48 @@ let currentPage = 1;
 
 // 初始化页面
 document.addEventListener('DOMContentLoaded', async () => {
-  // 1. 加载设置
+  // 1. 初始化国际化
+  await I18n.init();
+  
+  // 2. 翻译页面
+  I18n.translatePage();
+  
+  // 3. 加载设置
   const settings = await loadSettings();
   
-  // 2. 根据加载的设置更新字体选项
+  // 4. 根据加载的设置更新字体选项
   updateFontOptions(settings.targetLang, settings.targetLangFont);
   
-  // 3. 加载自定义词库并设置事件监听器
+  // 5. 加载自定义词库并设置事件监听器
   await loadCustomWords();
   setupEventListeners();
   
-  // 4. 为首次使用的用户检测浏览器语言
+  // 6. 为首次使用的用户检测浏览器语言
   const result = await chrome.storage.local.get(['settings']);
   if (!result.settings) {
     detectBrowserLanguage();
   }
+  
+  // 7. 监听语言变化消息
+  setupLanguageChangeListener();
 });
+
+// 设置语言变化监听器
+function setupLanguageChangeListener() {
+  // 监听来自 background script 的语言变化消息
+  chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
+    if (message.type === 'LANGUAGE_CHANGED') {
+      // 重新初始化国际化并翻译页面
+      I18n.setLanguage(message.language).then(() => {
+        I18n.translatePage();
+        // 重新更新字体选项
+        const targetLang = document.getElementById('targetLang').value;
+        const targetLangFont = document.getElementById('targetLangFont').value;
+        updateFontOptions(targetLang, targetLangFont);
+      });
+    }
+  });
+}
 
 // 加载设置
 async function loadSettings() {
@@ -195,7 +221,14 @@ function updateFontOptions(targetLang, fontToSet) {
   fonts.forEach(font => {
     const option = document.createElement('option');
     option.value = font.value;
-    option.textContent = font.label;
+    
+    // 支持国际化文本
+    if (font.isI18nKey && typeof I18n !== 'undefined') {
+      option.textContent = I18n.t(font.label);
+    } else {
+      option.textContent = font.label;
+    }
+    
     if (font.dataLang) {
       option.setAttribute('data-lang', font.dataLang);
     }
@@ -246,18 +279,18 @@ function displayCustomWords(customWords) {
     <div class="add-word-form" data-word="${word}">
         <input type="text" class="edit-original" value="${word}" />
         <input type="text" class="edit-translated" value="${customWords[word]}" />
-        <button class="delete-word" data-word="${word}">删除</button>
+        <button class="delete-word" data-word="${word}">${I18n.t('deleteWord')}</button>
     </div>
   `).join('');
   
   // 生成分页控件 - 使用class而不是onclick
   const paginationHtml = totalPages > 1 ? `
     <div class="pagination">
-      <button class="page-btn" data-page="${currentPage - 1}" ${currentPage === 1 ? 'disabled' : ''}>上一页</button>
-      <span>第 ${currentPage} 页，共 ${totalPages} 页 (${words.length} 个词汇)</span>
-      <button class="page-btn" data-page="${currentPage + 1}" ${currentPage === totalPages ? 'disabled' : ''}>下一页</button>
+      <button class="page-btn" data-page="${currentPage - 1}" ${currentPage === 1 ? 'disabled' : ''}>${I18n.t('previousPage')}</button>
+      <span>${I18n.t('pageInfo', currentPage, totalPages, words.length)}</span>
+      <button class="page-btn" data-page="${currentPage + 1}" ${currentPage === totalPages ? 'disabled' : ''}>${I18n.t('nextPage')}</button>
     </div>
-  ` : `<div class="word-count">共 ${words.length} 个词汇</div>`;
+  ` : `<div class="word-count">${I18n.t('totalWords', words.length)}</div>`;
   
   wordList.innerHTML = wordsHtml + paginationHtml;
 }
@@ -312,7 +345,7 @@ async function addCustomWord(original, translated) {
     
     // 检查是否已存在该词汇
     if (customWords[original.trim()]) {
-      alert('该词汇已存在');
+      alert(I18n.t('wordAlreadyExists'));
       return;
     }
     
@@ -372,7 +405,7 @@ async function deleteCustomWord(word) {
 // 清空自定义词库
 async function clearCustomWords() {
   try {
-    if (confirm('确定要清空所有自定义词库吗？')) { 
+    if (confirm(I18n.t('confirmClearDictionary'))) { 
       // 清空词库
       await chrome.storage.local.set({ customWords: {} });
       await loadCustomWords();
@@ -496,6 +529,14 @@ function setupEventListeners() {
     showOriginalTextButton.addEventListener('click', showOriginalText);
   }
 
+  // 打开选项页面
+  const openOptionsButton = document.getElementById('openOptions');
+  if (openOptionsButton) {
+    openOptionsButton.addEventListener('click', () => {
+      chrome.runtime.openOptionsPage();
+    });
+  }
+
   // 监听设置变化并保存
   const sourceLang = document.getElementById('sourceLang');
   const targetLang = document.getElementById('targetLang');
@@ -555,7 +596,7 @@ function setupEventListeners() {
       if (original.trim() && translated.trim()) {
         addCustomWord(original, translated);
       } else {
-        alert('请输入原词和翻译');
+        alert(I18n.t('pleaseEnterWordAndTranslation'));
       }
     });
   }
@@ -567,7 +608,7 @@ function setupEventListeners() {
       // 处理删除按钮
       if (e.target.classList.contains('delete-word')) {
         const word = e.target.dataset.word;
-        if (confirm(`确定要删除词汇 "${word}" 吗？`)) {
+        if (confirm(I18n.t('confirmDeleteWord', word))) {
           deleteCustomWord(word);
         }
       }
@@ -680,7 +721,7 @@ async function exportCustomWords() {
     
     // 检查是否有词汇可导出
     if (Object.keys(customWords).length === 0) {
-      alert('词库为空，没有可导出的内容');
+      alert(I18n.t('dictionaryIsEmpty'));
       return;
     }
     
@@ -711,7 +752,7 @@ async function exportCustomWords() {
     console.log('词库导出成功');
   } catch (error) {
     console.error('导出词库失败:', error);
-    alert('导出词库失败，请重试');
+    alert(I18n.t('exportFailed'));
   }
 }
 
@@ -731,7 +772,7 @@ async function importCustomWords() {
       
       // 检查文件类型
       if (!file.name.toLowerCase().endsWith('.json')) {
-        alert('请选择JSON格式的文件');
+        alert(I18n.t('pleaseSelectJsonFile'));
         return;
       }
       
@@ -745,14 +786,14 @@ async function importCustomWords() {
             
             // 验证数据格式
             if (typeof importedWords !== 'object' || importedWords === null) {
-              alert('文件格式错误：不是有效的词库格式');
+              alert(I18n.t('invalidDictionaryFormat'));
               return;
             }
             
             // 验证每个条目是否为字符串
             for (const [key, value] of Object.entries(importedWords)) {
               if (typeof key !== 'string' || typeof value !== 'string') {
-                alert('文件格式错误：词库条目必须为字符串');
+                alert(I18n.t('invalidEntryFormat'));
                 return;
               }
             }
@@ -771,8 +812,8 @@ async function importCustomWords() {
             
             let shouldProceed = true;
             if (duplicates.length > 0) {
-              const duplicateList = duplicates.slice(0, 5).join(', ') + (duplicates.length > 5 ? ` 等${duplicates.length}个` : '');
-              shouldProceed = confirm(`发现重复词汇：${duplicateList}\n\n是否覆盖现有词汇？\n点击"确定"覆盖，点击"取消"跳过重复词汇`);
+              const duplicateList = duplicates.slice(0, 5).join(', ') + (duplicates.length > 5 ? ` ${I18n.t('andMore', duplicates.length)}` : '');
+              shouldProceed = confirm(I18n.t('confirmOverwriteDuplicates', duplicateList));
               
               if (!shouldProceed) {
                 // 移除重复词汇
@@ -783,7 +824,7 @@ async function importCustomWords() {
             }
             
             if (Object.keys(importedWords).length === 0) {
-              alert('没有新词汇可导入');
+              alert(I18n.t('noNewWordsToImport'));
               return;
             }
             
@@ -796,17 +837,17 @@ async function importCustomWords() {
             // 重新加载词库显示
             await loadCustomWords();
             
-            alert(`成功导入 ${Object.keys(importedWords).length} 个词汇`);
+            alert(I18n.t('importSuccess', Object.keys(importedWords).length));
             console.log('词库导入成功');
             
           } catch (parseError) {
             console.error('解析JSON失败:', parseError);
-            alert('文件格式错误：无法解析JSON文件，请检查文件格式');
+            alert(I18n.t('invalidJsonFormat'));
           }
         };
         
         reader.onerror = () => {
-          alert('读取文件失败，请重试');
+          alert(I18n.t('readFileFailed'));
         };
         
         // 以UTF-8编码读取文件
@@ -814,7 +855,7 @@ async function importCustomWords() {
         
       } catch (error) {
         console.error('处理文件失败:', error);
-        alert('处理文件失败，请重试');
+        alert(I18n.t('processFileFailed'));
       }
     });
     
@@ -825,6 +866,6 @@ async function importCustomWords() {
     
   } catch (error) {
     console.error('导入词库失败:', error);
-    alert('导入词库失败，请重试');
+    alert(I18n.t('importFailed'));
   }
 }

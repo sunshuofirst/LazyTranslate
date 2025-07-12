@@ -38,6 +38,13 @@ function setupMessageListener() {
   chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
     // console.log('Content script 收到消息:', request);
     
+    // 处理语言变化消息
+    if (request.type === 'LANGUAGE_CHANGED') {
+      // 如果页面中有翻译相关的界面，可以在这里更新
+      // 目前 content script 主要处理翻译逻辑，暂时不需要处理语言变化
+      return;
+    }
+    
     switch (request.action) {
       case 'translateCurrentPage':
         // console.log('开始翻译页面');
@@ -573,7 +580,7 @@ function showNotification(message, type = 'info') {
     if (notificationDiv.parentElement) {
       notificationDiv.remove();
     }
-  }, 3000);
+  }, 1000);
 }
 
 // 应用字体设置

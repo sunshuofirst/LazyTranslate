@@ -277,6 +277,20 @@ button {
   color: #495057;
 }
 
+/* 专门为打开选项页面按钮添加样式 */
+#openOptions {
+  background: #6f42c1;
+  color: white;
+  border: 1px solid #6f42c1;
+}
+
+#openOptions:hover {
+  background: #5a32a3;
+  border-color: #5a32a3;
+  transform: translateY(-1px);
+  box-shadow: 0 3px 10px rgba(111, 66, 193, 0.3);
+}
+
 #saveApiKey {
   background: #28a745;
   color: white;

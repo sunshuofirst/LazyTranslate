@@ -1,0 +1,215 @@
+{
+  "extensionName": {
+    "message": "LazyTranslate"
+  },
+  "extensionDescription": {
+    "message": "支持自定义词库的智能网页翻译扩展，支持多种翻译API"
+  },
+  "popupTitle": {
+    "message": "LazyTranslate"
+  },
+  "popupSubtitle": {
+    "message": "网页翻译工具"
+  },
+  "languageSettings": {
+    "message": "翻译语言设置"
+  },
+  "sourceLanguage": {
+    "message": "原语言:"
+  },
+  "targetLanguage": {
+    "message": "目标语言:"
+  },
+  "fontSettings": {
+    "message": "字体设置"
+  },
+  "targetLanguageFont": {
+    "message": "目标语言字体:"
+  },
+  "defaultFont": {
+    "message": "默认字体"
+  },
+  "translateCurrentPage": {
+    "message": "翻译当前页面"
+  },
+  "translateSelection": {
+    "message": "翻译选中内容"
+  },
+  "showOriginalText": {
+    "message": "显示网页原文"
+  },
+  "apiSettings": {
+    "message": "翻译API"
+  },
+  "selectApi": {
+    "message": "选择API:"
+  },
+  "googleTranslate": {
+    "message": "谷歌翻译"
+  },
+  "baiduTranslate": {
+    "message": "百度翻译"
+  },
+  "tencentTranslate": {
+    "message": "腾讯翻译"
+  },
+  "googleApiProxy": {
+    "message": "谷歌翻译API代理:"
+  },
+  "googleApiProxyDescription": {
+    "message": "空白时直连https://translate.googleapis.com<br/>由于国内无法访问，可使用自己的代理服务器"
+  },
+  "googleApiProxyPlaceholder": {
+    "message": "请输入谷歌翻译API代理"
+  },
+  "baiduApiKey": {
+    "message": "百度翻译API密钥:"
+  },
+  "baiduApiKeyPlaceholder": {
+    "message": "请输入API密钥"
+  },
+  "tencentApiKey": {
+    "message": "腾讯翻译API密钥:"
+  },
+  "tencentApiKeyPlaceholder": {
+    "message": "请输入SecretId:SecretKey"
+  },
+  "customWords": {
+    "message": "自定义词库"
+  },
+  "originalWord": {
+    "message": "原词"
+  },
+  "translatedWord": {
+    "message": "翻译"
+  },
+  "addWord": {
+    "message": "添加"
+  },
+  "clearWords": {
+    "message": "清空词库"
+  },
+  "exportWords": {
+    "message": "导出词库"
+  },
+  "importWords": {
+    "message": "导入词库"
+  },
+  "deleteWord": {
+    "message": "删除"
+  },
+  "optionsTitle": {
+    "message": "LazyTranslate 选项"
+  },
+  "displayLanguageSettings": {
+    "message": "显示语言设置"
+  },
+  "displayLanguage": {
+    "message": "界面语言:"
+  },
+  "chinese": {
+    "message": "中文"
+  },
+  "english": {
+    "message": "英文"
+  },
+  "saveSettings": {
+    "message": "保存设置"
+  },
+  "settingsSaved": {
+    "message": "设置已保存"
+  },
+  "openOptions": {
+    "message": "打开选项页面"
+  },
+  "autoDetect": {
+    "message": "自动识别"
+  },
+  "japanese": {
+    "message": "日语"
+  },
+  "korean": {
+    "message": "韩语"
+  },
+  "french": {
+    "message": "法语"
+  },
+  "german": {
+    "message": "德语"
+  },
+  "spanish": {
+    "message": "西班牙语"
+  },
+  "russian": {
+    "message": "俄语"
+  },
+  "portuguese": {
+    "message": "葡萄牙语"
+  },
+  "italian": {
+    "message": "意大利语"
+  },
+  "wordAlreadyExists": {
+    "message": "该词汇已存在"
+  },
+  "pleaseEnterWordAndTranslation": {
+    "message": "请输入原词和翻译"
+  },
+  "confirmDeleteWord": {
+    "message": "确定要删除词汇 \"{0}\" 吗？"
+  },
+  "dictionaryIsEmpty": {
+    "message": "词库为空，没有可导出的内容"
+  },
+  "exportFailed": {
+    "message": "导出词库失败，请重试"
+  },
+  "pleaseSelectJsonFile": {
+    "message": "请选择JSON格式的文件"
+  },
+  "invalidDictionaryFormat": {
+    "message": "文件格式错误：不是有效的词库格式"
+  },
+  "invalidEntryFormat": {
+    "message": "文件格式错误：词库条目必须为字符串"
+  },
+  "noNewWordsToImport": {
+    "message": "没有新词汇可导入"
+  },
+  "importSuccess": {
+    "message": "成功导入 {0} 个词汇"
+  },
+  "invalidJsonFormat": {
+    "message": "文件格式错误：无法解析JSON文件，请检查文件格式"
+  },
+  "readFileFailed": {
+    "message": "读取文件失败，请重试"
+  },
+  "processFileFailed": {
+    "message": "处理文件失败，请重试"
+  },
+  "importFailed": {
+    "message": "导入词库失败，请重试"
+  },
+  "previousPage": {
+    "message": "上一页"
+  },
+  "nextPage": {
+    "message": "下一页"
+  },
+  "pageInfo": {
+    "message": "第 {0} 页，共 {1} 页 ({2} 个词汇)"
+  },
+  "totalWords": {
+    "message": "共 {0} 个词汇"
+  },
+  "confirmClearDictionary": {
+    "message": "确定要清空所有自定义词库吗？"
+  },
+  "andMore": {
+    "message": "等{0}个"
+  },
+  "confirmOverwriteDuplicates": {
+    "message": "发现重复词汇：{0}\\n\\n是否覆盖现有词汇？\\n点击\"确定\"覆盖，点击\"取消\"跳过重复词汇"
+  }
+}

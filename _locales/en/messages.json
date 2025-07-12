@@ -1,0 +1,215 @@
+{
+  "extensionName": {
+    "message": "LazyTranslate"
+  },
+  "extensionDescription": {
+    "message": "Intelligent web translation extension with custom dictionary support, supports multiple translation APIs"
+  },
+  "popupTitle": {
+    "message": "LazyTranslate"
+  },
+  "popupSubtitle": {
+    "message": "Web Translation Tool"
+  },
+  "languageSettings": {
+    "message": "Translation Language Settings"
+  },
+  "sourceLanguage": {
+    "message": "Source Language:"
+  },
+  "targetLanguage": {
+    "message": "Target Language:"
+  },
+  "fontSettings": {
+    "message": "Font Settings"
+  },
+  "targetLanguageFont": {
+    "message": "Target Language Font:"
+  },
+  "defaultFont": {
+    "message": "Default Font"
+  },
+  "translateCurrentPage": {
+    "message": "Translate Current Page"
+  },
+  "translateSelection": {
+    "message": "Translate Selection"
+  },
+  "showOriginalText": {
+    "message": "Show Original Text"
+  },
+  "apiSettings": {
+    "message": "Translation API"
+  },
+  "selectApi": {
+    "message": "Select API:"
+  },
+  "googleTranslate": {
+    "message": "Google Translate"
+  },
+  "baiduTranslate": {
+    "message": "Baidu Translate"
+  },
+  "tencentTranslate": {
+    "message": "Tencent Translate"
+  },
+  "googleApiProxy": {
+    "message": "Google Translate API Proxy:"
+  },
+  "googleApiProxyDescription": {
+    "message": "Direct connection to https://translate.googleapis.com when blank<br/>Can use your own proxy server due to access restrictions"
+  },
+  "googleApiProxyPlaceholder": {
+    "message": "Enter Google Translate API proxy"
+  },
+  "baiduApiKey": {
+    "message": "Baidu Translate API Key:"
+  },
+  "baiduApiKeyPlaceholder": {
+    "message": "Enter API key"
+  },
+  "tencentApiKey": {
+    "message": "Tencent Translate API Key:"
+  },
+  "tencentApiKeyPlaceholder": {
+    "message": "Enter SecretId:SecretKey"
+  },
+  "customWords": {
+    "message": "Custom Dictionary"
+  },
+  "originalWord": {
+    "message": "Original Word"
+  },
+  "translatedWord": {
+    "message": "Translation"
+  },
+  "addWord": {
+    "message": "Add"
+  },
+  "clearWords": {
+    "message": "Clear Dictionary"
+  },
+  "exportWords": {
+    "message": "Export Dictionary"
+  },
+  "importWords": {
+    "message": "Import Dictionary"
+  },
+  "deleteWord": {
+    "message": "Delete"
+  },
+  "optionsTitle": {
+    "message": "LazyTranslate Options"
+  },
+  "displayLanguageSettings": {
+    "message": "Display Language Settings"
+  },
+  "displayLanguage": {
+    "message": "Interface Language:"
+  },
+  "chinese": {
+    "message": "Chinese"
+  },
+  "english": {
+    "message": "English"
+  },
+  "saveSettings": {
+    "message": "Save Settings"
+  },
+  "settingsSaved": {
+    "message": "Settings saved"
+  },
+  "openOptions": {
+    "message": "Open Options Page"
+  },
+  "autoDetect": {
+    "message": "Auto Detect"
+  },
+  "japanese": {
+    "message": "Japanese"
+  },
+  "korean": {
+    "message": "Korean"
+  },
+  "french": {
+    "message": "French"
+  },
+  "german": {
+    "message": "German"
+  },
+  "spanish": {
+    "message": "Spanish"
+  },
+  "russian": {
+    "message": "Russian"
+  },
+  "portuguese": {
+    "message": "Portuguese"
+  },
+  "italian": {
+    "message": "Italian"
+  },
+  "wordAlreadyExists": {
+    "message": "This word already exists"
+  },
+  "pleaseEnterWordAndTranslation": {
+    "message": "Please enter both original word and translation"
+  },
+  "confirmDeleteWord": {
+    "message": "Are you sure you want to delete the word \"{0}\"?"
+  },
+  "dictionaryIsEmpty": {
+    "message": "Dictionary is empty, nothing to export"
+  },
+  "exportFailed": {
+    "message": "Failed to export dictionary, please try again"
+  },
+  "pleaseSelectJsonFile": {
+    "message": "Please select a JSON format file"
+  },
+  "invalidDictionaryFormat": {
+    "message": "File format error: not a valid dictionary format"
+  },
+  "invalidEntryFormat": {
+    "message": "File format error: dictionary entries must be strings"
+  },
+  "noNewWordsToImport": {
+    "message": "No new words to import"
+  },
+  "importSuccess": {
+    "message": "Successfully imported {0} words"
+  },
+  "invalidJsonFormat": {
+    "message": "File format error: unable to parse JSON file, please check file format"
+  },
+  "readFileFailed": {
+    "message": "Failed to read file, please try again"
+  },
+  "processFileFailed": {
+    "message": "Failed to process file, please try again"
+  },
+  "importFailed": {
+    "message": "Failed to import dictionary, please try again"
+  },
+  "previousPage": {
+    "message": "Previous"
+  },
+  "nextPage": {
+    "message": "Next"
+  },
+  "pageInfo": {
+    "message": "Page {0} of {1} ({2} words)"
+  },
+  "totalWords": {
+    "message": "Total {0} words"
+  },
+  "confirmClearDictionary": {
+    "message": "Are you sure you want to clear all custom dictionary?"
+  },
+  "andMore": {
+    "message": "and {0} more"
+  },
+  "confirmOverwriteDuplicates": {
+    "message": "Found duplicate words: {0}\\n\\nDo you want to overwrite existing words?\\nClick \"OK\" to overwrite, \"Cancel\" to skip duplicates"
+  }
+}

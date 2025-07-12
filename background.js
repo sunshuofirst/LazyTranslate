@@ -10,6 +10,20 @@ try {
 // 全局变量
 const settingsCache = new Map();
 
+// 监听消息
+chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
+  if (message.type === 'LANGUAGE_CHANGED') {
+    // 转发语言变化消息到所有标签页
+    chrome.tabs.query({}, (tabs) => {
+      tabs.forEach(tab => {
+        chrome.tabs.sendMessage(tab.id, message).catch(() => {
+          // 忽略无法发送消息的标签页
+        });
+      });
+    });
+  }
+});
+
 // 初始化扩展
 chrome.runtime.onInstalled.addListener(() => {
   // 创建右键菜单 - 一级菜单结构
