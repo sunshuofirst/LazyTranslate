@@ -1,6 +1,6 @@
 {
   "manifest_version": 3,
-  "name": "LazyTranslate - 智能网页翻译",
+  "name": "LazyTranslate",
   "version": "1.0.0",
   "description": "支持自定义词库的智能网页翻译扩展，支持多种翻译API",
   "permissions": [
