@@ -350,6 +350,12 @@ function getTextNodes(element) {
         if (parent && (parent.tagName === 'SCRIPT' || parent.tagName === 'STYLE')) {
           return NodeFilter.FILTER_REJECT;
         }
+        
+        // 排除代码块中的文本
+        if (isInsideCodeBlock(node)) {
+          return NodeFilter.FILTER_REJECT;
+        }
+        
         return NodeFilter.FILTER_ACCEPT;
       }
     }
@@ -385,7 +391,7 @@ async function translateTextNode(node, settings) {
   }
 
   // 如果是代码节点（<code>或者<pre>），则跳过
-  if (node.parentElement && (node.parentElement.tagName === 'CODE' || node.parentElement.tagName === 'PRE')) {
+  if (isInsideCodeBlock(node)) {
     return;
   }
   
@@ -621,6 +627,44 @@ function ensureFontStyleExists(fontFamily) {
   `;
     document.head.appendChild(styleElement);
   }
+}
+
+// 检查节点是否在代码块内（递归检查所有父级元素）
+function isInsideCodeBlock(node) {
+  let current = node.parentElement;
+  
+  while (current && current !== document.body) {
+    const tagName = current.tagName;
+    
+    // 检查是否是代码相关的标签
+    if (tagName === 'CODE' || tagName === 'PRE' || tagName === 'KBD' || tagName === 'SAMP' || tagName === 'VAR') {
+      return true;
+    }
+    
+    // 检查是否有代码相关的class
+    if (current.className) {
+      const className = current.className.toLowerCase();
+      if (className.includes('code') || 
+          className.includes('highlight') || 
+          className.includes('syntax') ||
+          className.includes('language-') ||
+          className.includes('hljs') ||
+          className.includes('prism')) {
+        return true;
+      }
+    }
+    
+    // 检查是否有代码相关的data属性
+    if (current.hasAttribute('data-lang') || 
+        current.hasAttribute('data-language') ||
+        current.hasAttribute('data-code')) {
+      return true;
+    }
+    
+    current = current.parentElement;
+  }
+  
+  return false;
 }
 
 // 监听自定义词库变化
