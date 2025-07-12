@@ -105,6 +105,10 @@ const FONT_CONFIG = {
   ]
 };
 
+// 在文件顶部添加分页配置
+const WORDS_PER_PAGE = 5; // 每页显示词汇数量
+let currentPage = 1;
+
 // 初始化页面
 document.addEventListener('DOMContentLoaded', async () => {
   // 1. 加载设置
@@ -231,13 +235,37 @@ function displayCustomWords(customWords) {
     return;
   }
   
-  wordList.innerHTML = words.map(word => `
+  // 计算分页
+  const totalPages = Math.ceil(words.length / WORDS_PER_PAGE);
+  const startIndex = (currentPage - 1) * WORDS_PER_PAGE;
+  const endIndex = startIndex + WORDS_PER_PAGE;
+  const currentWords = words.slice(startIndex, endIndex);
+  
+  // 显示当前页词汇
+  const wordsHtml = currentWords.map(word => `
     <div class="add-word-form" data-word="${word}">
         <input type="text" class="edit-original" value="${word}" />
         <input type="text" class="edit-translated" value="${customWords[word]}" />
         <button class="delete-word" data-word="${word}">删除</button>
     </div>
   `).join('');
+  
+  // 生成分页控件 - 使用class而不是onclick
+  const paginationHtml = totalPages > 1 ? `
+    <div class="pagination">
+      <button class="page-btn" data-page="${currentPage - 1}" ${currentPage === 1 ? 'disabled' : ''}>上一页</button>
+      <span>第 ${currentPage} 页，共 ${totalPages} 页 (${words.length} 个词汇)</span>
+      <button class="page-btn" data-page="${currentPage + 1}" ${currentPage === totalPages ? 'disabled' : ''}>下一页</button>
+    </div>
+  ` : `<div class="word-count">共 ${words.length} 个词汇</div>`;
+  
+  wordList.innerHTML = wordsHtml + paginationHtml;
+}
+
+// 添加页面切换函数
+function changePage(page) {
+  currentPage = page;
+  loadCustomWords();
 }
 
 // 自动保存编辑后的词汇
@@ -282,9 +310,24 @@ async function addCustomWord(original, translated) {
     const result = await chrome.storage.local.get(['customWords']);
     const customWords = result.customWords || {};
     
+    // 检查是否已存在该词汇
+    if (customWords[original.trim()]) {
+      alert('该词汇已存在');
+      return;
+    }
+    
     customWords[original.trim()] = translated.trim();
     
     await chrome.storage.local.set({ customWords });
+    
+    // 计算新词汇应该在哪一页（按字母顺序排序后）
+    const allWords = Object.keys(customWords).sort();
+    const newWordIndex = allWords.indexOf(original.trim());
+    const newPage = Math.ceil((newWordIndex + 1) / WORDS_PER_PAGE);
+    
+    // 跳转到包含新词汇的页面
+    currentPage = newPage;
+    
     await loadCustomWords();
     
     // 清空输入框
@@ -297,7 +340,7 @@ async function addCustomWord(original, translated) {
   }
 }
 
-// 删除自定义词汇
+// 删除词汇后调整当前页
 async function deleteCustomWord(word) {
   try {
     const result = await chrome.storage.local.get(['customWords']);
@@ -306,6 +349,18 @@ async function deleteCustomWord(word) {
     delete customWords[word];
     
     await chrome.storage.local.set({ customWords });
+    
+    // 检查删除后当前页是否还有内容
+    const remainingWords = Object.keys(customWords);
+    const totalPages = Math.ceil(remainingWords.length / WORDS_PER_PAGE);
+    
+    // 如果当前页超出了总页数，跳转到最后一页
+    if (currentPage > totalPages && totalPages > 0) {
+      currentPage = totalPages;
+    } else if (remainingWords.length === 0) {
+      currentPage = 1;
+    }
+    
     await loadCustomWords();
     
     // console.log('词汇已删除');
@@ -505,14 +560,23 @@ function setupEventListeners() {
     });
   }
   
-  // 删除自定义词汇
+  // 删除自定义词汇和分页事件
   const wordList = document.getElementById('wordList');
   if (wordList) {
     wordList.addEventListener('click', (e) => {
+      // 处理删除按钮
       if (e.target.classList.contains('delete-word')) {
         const word = e.target.dataset.word;
         if (confirm(`确定要删除词汇 "${word}" 吗？`)) {
           deleteCustomWord(word);
+        }
+      }
+      
+      // 处理分页按钮
+      if (e.target.classList.contains('page-btn') && !e.target.disabled) {
+        const page = parseInt(e.target.dataset.page);
+        if (page > 0) {
+          changePage(page);
         }
       }
     });
@@ -520,7 +584,7 @@ function setupEventListeners() {
     // 添加输入框变化监听器用于自动保存
     wordList.addEventListener('input', (e) => {
       if (e.target.classList.contains('edit-original') || e.target.classList.contains('edit-translated')) {
-        const wordItem = e.target.closest('.word-item');
+        const wordItem = e.target.closest('.add-word-form'); // 修改为正确的class名
         const word = wordItem.dataset.word;
         
         // 延迟保存，避免频繁保存
