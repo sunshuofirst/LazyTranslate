@@ -44,7 +44,7 @@ function setupEventListeners() {
   });
 }
 
-// 更新语言选择下拉框的选项文本
+// 更新语言选择下拉框的选项文本（保持原始语言显示）
 function updateLanguageOptions() {
   const displayLanguageSelect = document.getElementById('displayLanguage');
   const options = displayLanguageSelect.querySelectorAll('option');
@@ -52,9 +52,9 @@ function updateLanguageOptions() {
   options.forEach(option => {
     const value = option.value;
     if (value === 'zh') {
-      option.textContent = I18n.t('chinese');
+      option.textContent = '中文';
     } else if (value === 'en') {
-      option.textContent = I18n.t('english');
+      option.textContent = 'English';
     }
   });
 }
