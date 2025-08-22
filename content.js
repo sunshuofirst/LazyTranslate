@@ -8,11 +8,24 @@ let isTranslating = false; // 标记是否正在翻译
 let translationAborted = false; // 标记翻译是否被中止
 let elementSelector = null; // 元素选择器实例
 
+// 安全获取元素的className字符串
+function getElementClassName(element) {
+  if (!element || !element.className) {
+    return '';
+  }
+  return typeof element.className === 'string' 
+    ? element.className 
+    : element.className.toString();
+}
+
 // 初始化
 // console.log('LazyTranslate content script 已加载');
 
 // 立即设置消息监听器
 setupMessageListener();
+
+// 启用Shadow DOM拦截
+interceptShadowDOMCreation();
 
 // 延迟加载自定义词库
 setTimeout(async () => {
@@ -186,12 +199,14 @@ async function translateElement(element) {
     await loadCustomWords();
     const settings = await getDefaultSettings();
     
-    // 2. 获取元素内的所有文本节点
-    const textNodes = getTextNodes(element === null ? document.body : element);
+    // 2. 获取元素内的所有文本节点（包括Shadow DOM）
+    const textNodes = getTextNodesIncludingAllShadow(element === null ? document.body : element);
     if (textNodes.length === 0) {
       showNotification('该区域没有可翻译的文本', 'error');
       return;
     }
+
+    console.log(`发现 ${textNodes.length} 个文本节点（包括Shadow DOM）`);
 
     // 显示中止提示
     showNotification('翻译中... (按ESC键中止)', 'info');
@@ -419,6 +434,67 @@ function getTextNodes(element) {
   }
   
   return textNodes;
+}
+
+// 获取所有Shadow DOM根节点
+function getAllShadowRootsRecursive(element) {
+  const shadowRoots = [];
+  
+  function traverse(el) {
+    // 直接访问shadowRoot属性（只适用于open模式）
+    if (el.shadowRoot) {
+      shadowRoots.push(el.shadowRoot);
+      traverse(el.shadowRoot);
+    }
+    
+    // 递归处理子元素
+    Array.from(el.children || []).forEach(child => traverse(child));
+  }
+  
+  traverse(element);
+  return shadowRoots;
+}
+
+// 获取包含Shadow DOM的所有文本节点
+function getTextNodesIncludingAllShadow(element) {
+  const textNodes = [];
+  
+  // 1. 获取常规DOM中的文本节点
+  textNodes.push(...getTextNodes(element));
+  
+  // 2. 获取所有Shadow DOM中的文本节点
+  const shadowRoots = getAllShadowRootsRecursive(element);
+  shadowRoots.forEach(shadowRoot => {
+    try {
+      const shadowTextNodes = getTextNodes(shadowRoot);
+      textNodes.push(...shadowTextNodes);
+      console.log(`在Shadow DOM中发现 ${shadowTextNodes.length} 个文本节点`);
+    } catch (e) {
+      console.warn('无法访问Shadow DOM:', e);
+    }
+  });
+  
+  return textNodes;
+}
+
+// 拦截Shadow DOM创建
+function interceptShadowDOMCreation() {
+  const originalAttachShadow = Element.prototype.attachShadow;
+  
+  Element.prototype.attachShadow = function(options) {
+    const shadowRoot = originalAttachShadow.call(this, options);
+    
+    console.log('拦截到Shadow DOM创建:', this, shadowRoot);
+    
+    // 延迟处理，确保Shadow DOM内容已加载
+    setTimeout(() => {
+      if (shadowRoot && shadowRoot.innerHTML) {
+        console.log('新Shadow DOM内容已加载');
+      }
+    }, 100);
+    
+    return shadowRoot;
+  };
 }
 
 // 转义正则表达式特殊字符
@@ -712,7 +788,7 @@ function isInsideCodeBlock(node) {
     
     // 检查是否有代码相关的class
     if (current.className) {
-      const className = current.className.toLowerCase();
+      const className = getElementClassName(current).toLowerCase();
       if (className.includes('code') || 
           className.includes('highlight') || 
           className.includes('syntax') ||
