@@ -335,8 +335,8 @@ async function restoreOriginalTexts() {
     // console.log('没有保存的原始文本');
     return;
   }
-  
-  // 遍历所有被标记的父元素
+
+  // 1. 处理常规DOM中的翻译元素
   const translatedElements = document.querySelectorAll('[data-lazytranslate-id]');
   // console.log('找到被翻译的元素数量:', translatedElements.length);
   
@@ -360,11 +360,49 @@ async function restoreOriginalTexts() {
     element.removeAttribute('data-lazytranslate-id');
     element.removeAttribute('data-lazytranslate');
   }
-  
+
+  // 2. 处理Shadow DOM中的翻译元素
+  await restoreShadowDOMTexts();
+
   // 移除字体样式
   removeFontStyles();
   
   // console.log('原始文本恢复完成');
+}
+
+// 恢复Shadow DOM中的原始文本
+async function restoreShadowDOMTexts() {
+  const shadowRoots = getAllShadowRootsRecursive(document.body);
+  
+  for (const shadowRoot of shadowRoots) {
+    try {
+      // 在Shadow DOM中查找被翻译的元素
+      const translatedElements = shadowRoot.querySelectorAll('[data-lazytranslate-id]');
+      
+      for (const element of translatedElements) {
+        const nodeId = element.getAttribute('data-lazytranslate-id');
+        const originalText = originalTexts.get(nodeId);
+        
+        if (originalText) {
+          // 找到该元素下的文本节点并恢复原始文本
+          const textNodes = getTextNodes(element);
+          for (const textNode of textNodes) {
+            if (textNode.textContent.trim()) {
+              textNode.textContent = originalText;
+              console.log('恢复Shadow DOM节点文本:', originalText);
+              break;
+            }
+          }
+        }
+        
+        // 移除标记属性
+        element.removeAttribute('data-lazytranslate-id');
+        element.removeAttribute('data-lazytranslate');
+      }
+    } catch (e) {
+      console.warn('无法恢复Shadow DOM文本:', e);
+    }
+  }
 }
 
 // 恢复翻译后的内容
@@ -716,18 +754,45 @@ function addFontStyle(fontFamily) {
 
 // 移除字体样式
 function removeFontStyles() {
+  // 移除主文档中的字体样式
   const existingStyle = document.getElementById('lazytranslate-font-style');
   if (existingStyle) {
     existingStyle.remove();
   }
   
-  // 移除所有字体class
+  // 移除主文档中所有字体class
   const elementsWithFontClass = document.querySelectorAll('.lazytranslate-font-applied');
   elementsWithFontClass.forEach(element => {
     element.classList.remove('lazytranslate-font-applied');
   });
+
+  // 移除Shadow DOM中的字体样式
+  removeShadowDOMFontStyles();
   
   // console.log('字体样式已移除');
+}
+
+// 移除Shadow DOM中的字体样式
+function removeShadowDOMFontStyles() {
+  const shadowRoots = getAllShadowRootsRecursive(document.body);
+  
+  for (const shadowRoot of shadowRoots) {
+    try {
+      // 移除Shadow DOM中的字体样式
+      const existingStyle = shadowRoot.getElementById('lazytranslate-font-style');
+      if (existingStyle) {
+        existingStyle.remove();
+      }
+      
+      // 移除Shadow DOM中所有字体class
+      const elementsWithFontClass = shadowRoot.querySelectorAll('.lazytranslate-font-applied');
+      elementsWithFontClass.forEach(element => {
+        element.classList.remove('lazytranslate-font-applied');
+      });
+    } catch (e) {
+      console.warn('无法移除Shadow DOM字体样式:', e);
+    }
+  }
 }
 
 // 为单个元素应用字体设置
@@ -736,8 +801,16 @@ function applyFontToElement(element, fontFamily) {
     return;
   }
   
-  // 确保字体样式已添加到页面
-  ensureFontStyleExists(fontFamily);
+  // 检查元素是否在Shadow DOM中
+  const shadowRoot = getShadowRootForElement(element);
+  
+  if (shadowRoot) {
+    // 在Shadow DOM中应用字体
+    ensureFontStyleExistsInShadowDOM(shadowRoot, fontFamily);
+  } else {
+    // 在主文档中应用字体
+    ensureFontStyleExists(fontFamily);
+  }
   
   // 为当前元素添加字体class
   element.classList.add('lazytranslate-font-applied');
@@ -747,6 +820,40 @@ function applyFontToElement(element, fontFamily) {
   childElements.forEach(child => {
     child.classList.add('lazytranslate-font-applied');
   });
+}
+
+// 获取元素所在的Shadow DOM根节点
+function getShadowRootForElement(element) {
+  let current = element;
+  while (current) {
+    if (current.host) {
+      return current;
+    }
+    current = current.parentNode;
+  }
+  return null;
+}
+
+// 在Shadow DOM中确保字体样式存在
+function ensureFontStyleExistsInShadowDOM(shadowRoot, fontFamily) {
+  const existingStyle = shadowRoot.getElementById('lazytranslate-font-style');
+  
+  if (existingStyle) {
+    const expectedContent = `.lazytranslate-font-applied {\n      font-family: "${fontFamily}" !important;\n    }`;
+    if (existingStyle.textContent.trim().includes(`font-family: "${fontFamily}"`)) {
+      return;
+    }
+    existingStyle.textContent = expectedContent;
+  } else {
+    const styleElement = document.createElement('style');
+    styleElement.id = 'lazytranslate-font-style';
+    styleElement.textContent = `
+    .lazytranslate-font-applied {
+      font-family: "${fontFamily}" !important;
+    }
+  `;
+    shadowRoot.appendChild(styleElement);
+  }
 }
 
 // 确保字体样式存在于页面中
