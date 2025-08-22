@@ -44,8 +44,62 @@ class ElementRenderer {
   
   getTagPath(element) {
     const parent = element.parentElement;
-    const parentTagName = parent?.tagName.toLowerCase() ?? "";
+    let parentTagName = parent?.tagName.toLowerCase() ?? "";
+    
+    // 如果元素在Shadow DOM中，添加标识
+    if (this.isInShadowDOM(element)) {
+      parentTagName = parentTagName ? `[shadow] ${parentTagName}` : "[shadow]";
+    }
+    
     return `${parentTagName} ${element.tagName.toLowerCase()}`;
+  }
+  
+  // 检查元素是否在Shadow DOM中
+  isInShadowDOM(element) {
+    let current = element;
+    while (current) {
+      if (current.host) {
+        return true;
+      }
+      current = current.parentNode;
+    }
+    return false;
+  }
+  
+  // 获取所有可选择的元素（包括Shadow DOM）
+  getAllSelectableElements() {
+    const elements = [];
+    
+    // 1. 获取常规DOM中的元素
+    const regularElements = document.querySelectorAll('body *');
+    elements.push(...regularElements);
+    
+    // 2. 获取Shadow DOM中的元素
+    this.collectShadowDOMElements(document.body, elements);
+    
+    return elements;
+  }
+  
+  // 递归收集Shadow DOM中的元素
+  collectShadowDOMElements(root, elementList) {
+    const walker = document.createTreeWalker(
+      root,
+      NodeFilter.SHOW_ELEMENT,
+      null,
+      false
+    );
+    
+    let node;
+    while (node = walker.nextNode()) {
+      if (node.shadowRoot) {
+        // 收集Shadow DOM中的所有元素
+        const shadowElements = node.shadowRoot.querySelectorAll('*');
+        elementList.push(...shadowElements);
+        
+        // 递归处理嵌套的Shadow DOM
+        this.collectShadowDOMElements(node.shadowRoot, elementList);
+      }
+    }
   }
   
   initialize() {
@@ -139,7 +193,28 @@ class ElementSelector {
       return;
     }
     
-    this.renderer.add(event.target);
+    // 尝试使用elementFromPoint获取更精确的元素（支持Shadow DOM）
+    const elementAtPoint = this.getElementFromPointWithShadowDOM(event.clientX, event.clientY);
+    const targetElement = elementAtPoint || event.target;
+    
+    this.renderer.add(targetElement);
+  };
+  
+  // 增强的elementFromPoint，支持Shadow DOM
+  getElementFromPointWithShadowDOM(x, y) {
+    let element = document.elementFromPoint(x, y);
+    
+    // 如果找到元素，尝试深入Shadow DOM
+    while (element && element.shadowRoot) {
+      const shadowElement = element.shadowRoot.elementFromPoint(x, y);
+      if (shadowElement && shadowElement !== element) {
+        element = shadowElement;
+      } else {
+        break;
+      }
+    }
+    
+    return element;
   };
   
   // 点击处理
@@ -152,7 +227,11 @@ class ElementSelector {
       return;
     }
     
-    const target = event.target;
+    // 使用增强的元素检测（支持Shadow DOM）
+    const elementAtPoint = this.getElementFromPointWithShadowDOM(event.clientX, event.clientY);
+    const target = elementAtPoint || event.target;
+    
+    console.log('选中元素:', target, '是否在Shadow DOM中:', this.renderer.isInShadowDOM(target));
     
     // 如果设置了回调函数，则调用
     if (this.onElementSelected && typeof this.onElementSelected === 'function') {
@@ -171,8 +250,8 @@ class ElementSelector {
     this.isOpen = true;
     this.renderer.show();
     
-    // 为所有元素添加事件监听器
-    const elements = document.querySelectorAll('body *');
+    // 为所有元素添加事件监听器（包括Shadow DOM元素）
+    const elements = this.renderer.getAllSelectableElements();
     for (const element of elements) {
       element.addEventListener("click", this.handleClick, {
         capture: true,
@@ -194,8 +273,8 @@ class ElementSelector {
     this.isOpen = false;
     this.renderer.hide();
     
-    // 移除所有元素的事件监听器
-    const elements = document.querySelectorAll('body *');
+    // 移除所有元素的事件监听器（包括Shadow DOM元素）
+    const elements = this.renderer.getAllSelectableElements();
     for (const element of elements) {
       element.removeEventListener("click", this.handleClick, {
         capture: true,
