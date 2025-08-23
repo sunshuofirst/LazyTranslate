@@ -21,9 +21,6 @@ function getElementClassName(element) {
 // 立即设置消息监听器
 setupMessageListener();
 
-// 启用Shadow DOM拦截
-interceptShadowDOMCreation();
-
 // 延迟加载自定义词库
 setTimeout(async () => {
   await loadCustomWords();
@@ -276,7 +273,6 @@ async function translateElement(element) {
       }
       
       const progress = Math.min(100, ((i + batchSize) / textNodes.length) * 100);
-      updateTranslationProgress(progress);
 
       showNotification(`翻译进度: ${Math.round(progress)}% (按ESC键中止)`, 'info');
       
@@ -563,7 +559,7 @@ async function getTextNodesIncludingAllShadow(element) {
       // console.log('🔍 检测到slot元素，等待动态内容加载...');
       
       // 对于Salesforce页面，我们需要等待更长时间让内容完全加载
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      // await new Promise(resolve => setTimeout(resolve, 1000));
       
       // 等待动态内容加载
       try {
@@ -822,16 +818,6 @@ function getTextNodesFromShadowElement(element) {
   return textNodes;
 }
 
-// 拦截Shadow DOM创建
-function interceptShadowDOMCreation() {
-  const originalAttachShadow = Element.prototype.attachShadow;
-  
-  Element.prototype.attachShadow = function(options) {
-    const shadowRoot = originalAttachShadow.call(this, options);
-    return shadowRoot;
-  };
-}
-
 // 转义正则表达式特殊字符
 function escapeRegExp(string) {
   return string.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
@@ -992,14 +978,6 @@ async function translateText(text, settings) {
   });
 }
 
-// 更新翻译进度
-function updateTranslationProgress(progress) {
-  const progressBar = document.getElementById('progressBar');
-  if (progressBar) {
-    progressBar.style.width = progress + '%';
-  }
-}
-
 // 显示通知信息
 function showNotification(message, type = 'info') {
   // 如果通知信息已显示，则移除
@@ -1035,7 +1013,7 @@ function showNotification(message, type = 'info') {
     if (notificationDiv.parentElement) {
       notificationDiv.remove();
     }
-  }, 1000);
+  }, 3000);
 }
 
 // 应用字体设置
