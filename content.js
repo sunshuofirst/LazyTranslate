@@ -208,13 +208,11 @@ async function translateElement(element) {
       
       // 跳过已经翻译过的节点
       if (node.parentElement && node.parentElement.hasAttribute('data-lazytranslate')) {
-        // console.log(`⏭️ 跳过已翻译节点 ${index + 1}: ${text.substring(0, 50)}...`);
         return;
       }
       
       // 跳过重复文本
       if (processedTexts.has(text)) {
-        // console.log(`⏭️ 跳过重复文本 ${index + 1}: ${text.substring(0, 50)}...`);
         return;
       }
       
@@ -225,7 +223,6 @@ async function translateElement(element) {
       
       processedTexts.add(text);
       uniqueTextNodes.push(node);
-      // console.log(`✅ 接受文本节点 ${uniqueTextNodes.length}: ${text.substring(0, 50)}...`);
     });
     
     if (uniqueTextNodes.length === 0) {
@@ -233,7 +230,6 @@ async function translateElement(element) {
       return;
     }
     
-    // console.log(`去重后剩余 ${uniqueTextNodes.length} 个唯一文本节点需要翻译`);
 
     // 显示中止提示
     showNotification('翻译中... (按ESC键中止)', 'info');
@@ -242,7 +238,6 @@ async function translateElement(element) {
     const batchSize = 5;
     let interval = settings.apiProvider == 'google' ? 100 : 1000;
 
-    // console.log(`开始批量翻译，批次大小: ${batchSize}, 间隔: ${interval}ms`);
 
     for (let i = 0; i < uniqueTextNodes.length; i += batchSize) {
       // 检查是否被中止
@@ -252,10 +247,8 @@ async function translateElement(element) {
       }
       
       const batch = uniqueTextNodes.slice(i, i + batchSize);
-      // console.log(`翻译批次 ${Math.floor(i/batchSize) + 1}, 节点数: ${batch.length}`);
       
       const promises = batch.map((node, index) => {
-        // console.log(`准备翻译节点 ${i + index + 1}: "${node.textContent.trim().substring(0, 50)}..."`);
         return translateTextNode(node, settings);
       }); 
       
@@ -694,7 +687,7 @@ function waitAndProcessDynamicContent(element, maxWaitTime = 5000) {
               // 特别检查Salesforce文档元素
               if (node.tagName && (
                 node.tagName.toLowerCase().includes('doc-') ||
-                node.className.includes('doc-') ||
+                (node.className && String(node.className).includes('doc-')) ||
                 node.tagName === 'DOC-BREADCRUMBS' ||
                 node.tagName === 'DOC-CONTENT'
               )) {
@@ -894,7 +887,7 @@ async function translateTextNode(node, settings) {
       
       // 检查是否是LWC组件
       const isInLWC = parentElement && (
-        parentElement.className.includes('lwc-') || 
+        (parentElement.className && String(parentElement.className).includes('lwc-')) || 
         parentElement.closest('[class*="lwc-"]') ||
         parentElement.tagName.includes('DX-') ||
         parentElement.closest('[class*="slds-"]')
