@@ -221,6 +221,25 @@ async function translateWithGoogle(text, sourceLang, targetLang, googleApiProxy)
 
 // 百度翻译API
 async function translateWithBaidu(text, sourceLang, targetLang, apiKeyBaidu) {
+  // 百度翻译语种映射
+  const baiduLangMap = {
+    'auto': 'auto',
+    'zh': 'zh',
+    'en': 'en',
+    'ja': 'jp',
+    'ko': 'kor',
+    'fr': 'fra',
+    'es': 'spa',
+    'ru': 'ru',
+    'pt': 'pt',
+    'de': 'de',
+    'it': 'it'
+  };
+  
+  // 映射语种代码
+  const mappedSourceLang = baiduLangMap[sourceLang] || sourceLang;
+  const mappedTargetLang = baiduLangMap[targetLang] || targetLang;
+  
   const [appid, secret] = apiKeyBaidu.split(':');
   const salt = Date.now();
   const sign = await generateMD5(appid + text + salt + secret);
@@ -228,8 +247,8 @@ async function translateWithBaidu(text, sourceLang, targetLang, apiKeyBaidu) {
   const url = new URL('https://fanyi-api.baidu.com/api/trans/vip/translate');
   // url.searchParams.append('q', encodeURIComponent(text));
   url.searchParams.append('q', text);
-  url.searchParams.append('from', sourceLang);
-  url.searchParams.append('to', targetLang);
+  url.searchParams.append('from', mappedSourceLang);
+  url.searchParams.append('to', mappedTargetLang);
   url.searchParams.append('appid', appid);
   url.searchParams.append('salt', salt);
   url.searchParams.append('sign', sign);
