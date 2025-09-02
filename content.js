@@ -881,6 +881,11 @@ async function translateTextNode(node, settings) {
       // 记录更新前后的内容
       node.textContent = translatedText;
       
+      // 应用字体设置
+      if (settings.targetLangFont && settings.targetLangFont.trim() !== '') {
+        applyFontToElement(parentElement, settings.targetLangFont);
+      }
+      
       // 6. 监控DOM内容是否被其他脚本覆盖
       const monitorTextNode = node;
       const expectedText = translatedText;
